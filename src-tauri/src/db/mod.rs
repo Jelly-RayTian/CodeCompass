@@ -6,6 +6,7 @@ pub mod indexed_folders;
 pub mod references;
 pub mod scan_runs;
 pub mod symbols;
+pub mod workspace_settings;
 
 refinery::embed_migrations!("migrations");
 

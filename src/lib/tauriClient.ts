@@ -6,9 +6,12 @@ import type {
   ApplicationInfo,
   CallGraph,
   ChangeRisk,
+  CoChangePair,
   DatabaseStatus,
   DependencyGraph,
   FileEntry,
+  GitFileInfo,
+  GitInfo,
   ImportEntry,
   IndexedFolder,
   ScanRun,
@@ -17,6 +20,7 @@ import type {
   SymbolEntry,
   SymbolSearchResult,
   WorkspaceInsights,
+  WorkspaceSettings,
 } from '@/types';
 
 /**
@@ -158,13 +162,48 @@ export const tauriClient = {
     });
   },
 
-  getChangeImpact(
-    workspaceId: number,
-    symbolId: number,
-  ): Promise<ChangeRisk> {
+  getChangeImpact(workspaceId: number, symbolId: number): Promise<ChangeRisk> {
     return call<ChangeRisk>('get_change_impact', {
       workspaceId,
       symbolId,
+    });
+  },
+
+  getGitInfo(workspaceId: number): Promise<GitInfo> {
+    return call<GitInfo>('get_git_info', { workspaceId });
+  },
+
+  getFileGitInfo(
+    workspaceId: number,
+    relativePath: string,
+  ): Promise<GitFileInfo> {
+    return call<GitFileInfo>('get_file_git_info', {
+      workspaceId,
+      relativePath,
+    });
+  },
+
+  getWorkspaceSettings(workspaceId: number): Promise<WorkspaceSettings> {
+    return call<WorkspaceSettings>('get_workspace_settings', {
+      workspaceId,
+    });
+  },
+
+  updateWorkspaceSettings(
+    workspaceId: number,
+    gitAnalysisEnabled?: boolean,
+    autoReanalyzeEnabled?: boolean,
+  ): Promise<void> {
+    return call<void>('update_workspace_settings', {
+      workspaceId,
+      gitAnalysisEnabled: gitAnalysisEnabled ?? null,
+      autoReanalyzeEnabled: autoReanalyzeEnabled ?? null,
+    });
+  },
+
+  getCoChangeHotspots(workspaceId: number): Promise<CoChangePair[]> {
+    return call<CoChangePair[]>('get_co_change_hotspots', {
+      workspaceId,
     });
   },
 } as const;

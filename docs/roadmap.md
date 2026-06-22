@@ -136,7 +136,9 @@
 - Evidence, limitations, and static-analysis caveats on every finding
 - Frontend API for call graph + impact queries
 
-**Status:** Not started
+## Milestone 9 — Git Integration & Incremental Analysis
+
+**Status:** Complete
 
 - Auto-update mechanism
 - Installer configuration (MSI/NSIS for Windows)

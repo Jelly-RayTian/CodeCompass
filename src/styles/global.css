@@ -993,3 +993,50 @@ a {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Git panel ── */
+.git-panel {
+  margin-top: 16px;
+}
+
+.git-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.git-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cc-text-muted);
+}
+
+.git-value {
+  font-family: var(--cc-mono);
+  font-size: 13px;
+}
+
+.git-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.git-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.git-toggle input {
+  cursor: pointer;
+}
+
+.git-hotspots {
+  margin-top: 12px;
+}

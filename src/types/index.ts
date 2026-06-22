@@ -95,6 +95,12 @@ export interface CommandResult<T> {
 
 export type { CycleInfo, DependencyGraph, GraphEdge, GraphNode } from './graph';
 export type {
+  GitFileInfo,
+  GitInfo,
+  CoChangePair,
+  WorkspaceSettings,
+} from './git';
+export type {
   AffectedItem,
   CallGraph,
   CallGraphEdge,

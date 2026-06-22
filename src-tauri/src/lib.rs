@@ -2,6 +2,7 @@ mod analysis;
 mod commands;
 mod db;
 mod error;
+mod git;
 mod models;
 mod platform;
 mod scanner;
@@ -56,6 +57,11 @@ pub fn run() {
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::graph::get_dependency_graph,
+            commands::git::get_git_info,
+            commands::git::get_file_git_info,
+            commands::git::get_workspace_settings,
+            commands::git::update_workspace_settings,
+            commands::git::get_co_change_hotspots,
             commands::impact::get_call_graph,
             commands::impact::get_change_impact,
             commands::insights::get_workspace_insights,

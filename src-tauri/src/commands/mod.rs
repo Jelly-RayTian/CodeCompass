@@ -1,6 +1,7 @@
 pub mod analysis;
 pub mod application;
 pub mod database;
+pub mod git;
 pub mod graph;
 pub mod impact;
 pub mod insights;
