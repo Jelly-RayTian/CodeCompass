@@ -110,7 +110,17 @@
 - Coupling and cohesion metrics
 - Hotspot detection (high-churn, high-coupling files)
 
-## Milestone 7 — Polish and Distribution
+## Milestone 7 — Entry Points, Reading Paths & Structural Findings
+
+**Status:** Complete
+
+- Heuristic entry-point detection (filenames, directories, import-degree, naming)
+- Confidence scores with explicit reasons — never presents heuristics as facts
+- BFS-based beginner reading path from entry points with depth tracking
+- Structural findings: unresolved imports, large files, highly-connected modules, orphaned files, potentially unused exports
+- Every finding includes evidence, limitations, and investigation steps
+- Insights page with entry point list, numbered reading path, and categorized findings
+- No fake quality scores or AI-generated text
 
 **Status:** Not started
 

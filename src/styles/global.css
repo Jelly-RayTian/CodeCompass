@@ -882,3 +882,114 @@ a {
 .symbol-item-clickable:hover {
   background: var(--cc-surface-hover);
 }
+
+/* ── Insights page ── */
+.insights-page {
+  max-width: 900px;
+}
+
+.insights-page section {
+  margin-top: 32px;
+}
+
+.finding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.finding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: var(--cc-mono);
+  margin-bottom: 8px;
+}
+
+.finding-confidence {
+  font-size: 12px;
+  color: var(--cc-text-muted);
+  white-space: nowrap;
+}
+
+.finding-severity {
+  border-radius: 3px;
+  padding: 1px 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.fsev-warning {
+  background: rgba(239, 176, 91, 0.15);
+  color: #f0b05b;
+}
+
+.fsev-info {
+  background: var(--cc-surface-hover);
+  color: var(--cc-accent);
+}
+
+.finding-evidence {
+  font-family: var(--cc-mono);
+  font-size: 12px;
+  color: var(--cc-text-muted);
+}
+
+.finding-evidence ul {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 4px 0;
+}
+
+.finding-card {
+  padding: 16px;
+}
+
+.reading-path {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reading-item {
+  display: grid;
+  grid-template-columns: 30px 1fr 60px 180px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--cc-radius);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.reading-item:hover {
+  background: var(--cc-surface-hover);
+}
+
+.reading-order {
+  color: var(--cc-text-muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.reading-name {
+  font-family: var(--cc-mono);
+  font-weight: 500;
+}
+
+.reading-depth {
+  font-size: 11px;
+  color: var(--cc-text-muted);
+}
+
+.reading-reason {
+  font-size: 11px;
+  color: var(--cc-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

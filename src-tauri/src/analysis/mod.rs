@@ -1,4 +1,7 @@
+pub mod entrypoint;
+pub mod findings;
 pub mod graph;
+pub mod reading_path;
 pub mod resolver;
 pub mod runner;
 pub mod symbols;

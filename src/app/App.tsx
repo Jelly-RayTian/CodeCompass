@@ -4,6 +4,7 @@ import { AppShell } from './AppShell';
 import { LanguageProvider } from '@/i18n/LanguageContext';
 import { Graph } from '@/pages/Graph';
 import { Home } from '@/pages/Home';
+import { Insights } from '@/pages/Insights';
 import { Settings } from '@/pages/Settings';
 import { Viewer } from '@/pages/Viewer';
 import { Workspaces } from '@/pages/Workspaces';
@@ -17,6 +18,7 @@ export function App(): JSX.Element {
             <Route index element={<Home />} />
             <Route path="workspaces" element={<Workspaces />} />
             <Route path="graph" element={<Graph />} />
+            <Route path="insights" element={<Insights />} />
             <Route path="viewer" element={<Viewer />} />
             <Route path="settings" element={<Settings />} />
           </Route>

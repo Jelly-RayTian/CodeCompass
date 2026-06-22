@@ -15,6 +15,7 @@ export function Nav(): JSX.Element {
     { to: '/', label: t.nav.home, icon: '\u2302' },
     { to: '/workspaces', label: t.nav.workspaces, icon: '\u{1F4C1}' },
     { to: '/graph', label: t.nav.graph, icon: '\u{1F578}' },
+    { to: '/insights', label: t.nav.insights, icon: '\u{1F4CA}' },
     { to: '/settings', label: t.nav.settings, icon: '\u2699' },
   ];
 

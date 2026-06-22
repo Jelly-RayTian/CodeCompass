@@ -94,6 +94,12 @@ export interface CommandResult<T> {
 }
 
 export type { CycleInfo, DependencyGraph, GraphEdge, GraphNode } from './graph';
+export type {
+  EntryPoint,
+  ReadingPathItem,
+  StructuralFinding,
+  WorkspaceInsights,
+} from './insights';
 export type { SourceFile } from './source';
 export type { SymbolEntry, SymbolSearchResult } from './symbols';
 

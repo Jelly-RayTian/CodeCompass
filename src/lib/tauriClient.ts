@@ -14,6 +14,7 @@ import type {
   SourceFile,
   SymbolEntry,
   SymbolSearchResult,
+  WorkspaceInsights,
 } from '@/types';
 
 /**
@@ -134,6 +135,12 @@ export const tauriClient = {
     return call<SourceFile>('read_source_file', {
       workspaceId,
       relativePath,
+    });
+  },
+
+  getWorkspaceInsights(workspaceId: number): Promise<WorkspaceInsights> {
+    return call<WorkspaceInsights>('get_workspace_insights', {
+      workspaceId,
     });
   },
 } as const;
