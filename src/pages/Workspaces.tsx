@@ -4,7 +4,10 @@ import { listen } from '@tauri-apps/api/event';
 import { tauriClient } from '@/lib/tauriClient';
 import { useAsyncData } from '@/lib/useAsyncData';
 import type {
+  AnalysisDiagnostic,
+  AnalysisProgressEvent,
   FileEntry,
+  ImportEntry,
   IndexedFolder,
   ScanProgressEvent,
   ScanRun,
@@ -165,6 +168,16 @@ export function Workspaces(): JSX.Element {
   const [filesLoading, setFilesLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileEntry | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanRun[] | null>(null);
+  const [analyzingFolderId, setAnalyzingFolderId] = useState<number | null>(
+    null,
+  );
+  const [analysisProgress, setAnalysisProgress] = useState<
+    Record<number, AnalysisProgressEvent>
+  >({});
+  const [fileImports, setFileImports] = useState<ImportEntry[] | null>(null);
+  const [diagnostics, setDiagnostics] = useState<AnalysisDiagnostic[] | null>(
+    null,
+  );
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -225,6 +238,33 @@ export function Workspaces(): JSX.Element {
       }
     };
   }, [selectedFolderId, reloadFolders]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    const setup = async (): Promise<void> => {
+      unlisten = await listen<AnalysisProgressEvent>(
+        'analysis:progress',
+        (event) => {
+          const e = event.payload;
+          setAnalysisProgress((prev) => ({ ...prev, [e.workspaceId]: e }));
+          if (e.status !== 'running') {
+            setAnalyzingFolderId((current) =>
+              current === e.workspaceId ? null : current,
+            );
+            reloadFolders();
+          }
+        },
+      );
+    };
+    setup().catch((err: unknown) => {
+      console.error('Failed to listen to analysis progress', err);
+    });
+    return () => {
+      if (unlisten !== undefined) {
+        unlisten();
+      }
+    };
+  }, [reloadFolders]);
 
   useEffect(() => {
     if (scanningFolderId === null) {
@@ -289,8 +329,10 @@ export function Workspaces(): JSX.Element {
   const handleSelectFolder = (folderId: number): void => {
     setSelectedFolderId(folderId);
     setSelectedFile(null);
+    setFileImports(null);
     loadFiles(folderId);
     loadHistory(folderId);
+    loadDiagnostics(folderId);
   };
 
   const handleAddFolder = async (): Promise<void> => {
@@ -337,6 +379,43 @@ export function Workspaces(): JSX.Element {
     }
     try {
       await tauriClient.cancelScan(status.run.id);
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleAnalyze = async (folderId: number): Promise<void> => {
+    try {
+      await tauriClient.startAnalysis(folderId);
+      setAnalyzingFolderId(folderId);
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleCancelAnalysis = async (): Promise<void> => {
+    if (analyzingFolderId === null) return;
+    try {
+      await tauriClient.cancelAnalysis(analyzingFolderId);
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const loadDiagnostics = async (folderId: number): Promise<void> => {
+    try {
+      const data = await tauriClient.getAnalysisDiagnostics(folderId);
+      setDiagnostics(data);
+    } catch (err) {
+      setWarning(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  const handleFileSelect = async (file: FileEntry): Promise<void> => {
+    setSelectedFile(file);
+    try {
+      const imports = await tauriClient.getFileImports(file.id);
+      setFileImports(imports);
     } catch (err) {
       setWarning(err instanceof Error ? err.message : String(err));
     }
@@ -496,6 +575,21 @@ export function Workspaces(): JSX.Element {
                   </div>
                 )}
 
+                {analyzingFolderId === folder.id &&
+                  (() => {
+                    const ap = analysisProgress[folder.id];
+                    if (ap === undefined) return null;
+                    return (
+                      <div className="scan-progress">
+                        <div className="scan-phase">Analyzing…</div>
+                        <div className="scan-counters">
+                          Files {ap.filesProcessed} / {ap.filesTotal} · Parsed{' '}
+                          {ap.filesParsed}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                 <div className="folder-actions">
                   {isScanning ? (
                     <button
@@ -506,13 +600,37 @@ export function Workspaces(): JSX.Element {
                       Cancel scan
                     </button>
                   ) : (
+                    <>
+                      <button
+                        className="btn btn-primary"
+                        disabled={folder.availability !== 'available'}
+                        onClick={() => handleScan(folder.id)}
+                        type="button"
+                      >
+                        Scan folder
+                      </button>
+                      <button
+                        className="btn btn-primary"
+                        disabled={
+                          folder.availability !== 'available' ||
+                          analyzingFolderId === folder.id
+                        }
+                        onClick={() => handleAnalyze(folder.id)}
+                        type="button"
+                      >
+                        {analyzingFolderId === folder.id
+                          ? 'Analyzing…'
+                          : 'Analyze'}
+                      </button>
+                    </>
+                  )}
+                  {analyzingFolderId === folder.id && (
                     <button
-                      className="btn btn-primary"
-                      disabled={folder.availability !== 'available'}
-                      onClick={() => handleScan(folder.id)}
+                      className="btn btn-danger"
+                      onClick={handleCancelAnalysis}
                       type="button"
                     >
-                      Scan folder
+                      Cancel
                     </button>
                   )}
                   <button
@@ -561,7 +679,7 @@ export function Workspaces(): JSX.Element {
                   <TreeNodeView
                     node={tree}
                     selectedId={selectedFile?.id ?? null}
-                    onSelect={setSelectedFile}
+                    onSelect={handleFileSelect}
                   />
                 </div>
               )}
@@ -569,43 +687,72 @@ export function Workspaces(): JSX.Element {
 
             <div className="detail-side">
               {selectedFile !== null && (
-                <div className="card file-detail">
-                  <div className="panel-title">{selectedFile.name}</div>
-                  <div className="file-detail-row">
-                    <span>Relative path</span>
-                    <span>{selectedFile.relativePath}</span>
+                <>
+                  <div className="card file-detail">
+                    <div className="panel-title">{selectedFile.name}</div>
+                    <div className="file-detail-row">
+                      <span>Relative path</span>
+                      <span>{selectedFile.relativePath}</span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Extension</span>
+                      <span>{selectedFile.extension ?? '-'}</span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Size</span>
+                      <span>{selectedFile.sizeBytes} bytes</span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Modified</span>
+                      <span>{formatTimestamp(selectedFile.modifiedAt)}</span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Created</span>
+                      <span>{formatTimestamp(selectedFile.createdAt)}</span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Fingerprint</span>
+                      <span className="mono">
+                        {selectedFile.fingerprint ?? '-'}
+                      </span>
+                    </div>
+                    <div className="file-detail-row">
+                      <span>Status</span>
+                      <span
+                        className={changeStatusClass(selectedFile.changeStatus)}
+                      >
+                        {selectedFile.changeStatus}
+                      </span>
+                    </div>
                   </div>
-                  <div className="file-detail-row">
-                    <span>Extension</span>
-                    <span>{selectedFile.extension ?? '—'}</span>
-                  </div>
-                  <div className="file-detail-row">
-                    <span>Size</span>
-                    <span>{selectedFile.sizeBytes} bytes</span>
-                  </div>
-                  <div className="file-detail-row">
-                    <span>Modified</span>
-                    <span>{formatTimestamp(selectedFile.modifiedAt)}</span>
-                  </div>
-                  <div className="file-detail-row">
-                    <span>Created</span>
-                    <span>{formatTimestamp(selectedFile.createdAt)}</span>
-                  </div>
-                  <div className="file-detail-row">
-                    <span>Fingerprint</span>
-                    <span className="mono">
-                      {selectedFile.fingerprint ?? '—'}
-                    </span>
-                  </div>
-                  <div className="file-detail-row">
-                    <span>Status</span>
-                    <span
-                      className={changeStatusClass(selectedFile.changeStatus)}
-                    >
-                      {selectedFile.changeStatus}
-                    </span>
-                  </div>
-                </div>
+
+                  {fileImports !== null && (
+                    <div className="card file-detail">
+                      <div className="panel-title">
+                        Imports ({fileImports.length})
+                      </div>
+                      {fileImports.length === 0 ? (
+                        <div className="muted">No imports found.</div>
+                      ) : (
+                        <ul className="history-list">
+                          {fileImports.map((imp) => (
+                            <li key={imp.id} className="history-item">
+                              <div className="history-status">
+                                {imp.isExternal ? '📦' : '📄'}{' '}
+                                {imp.targetSpecifier}
+                              </div>
+                              <div className="history-meta">
+                                {imp.importType.replace(/_/g, ' ')}
+                                {imp.resolvedTargetFileId !== null &&
+                                  ' · resolved'}
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="card scan-history">
@@ -631,6 +778,24 @@ export function Workspaces(): JSX.Element {
                   </ul>
                 )}
               </div>
+
+              {diagnostics !== null && diagnostics.length > 0 && (
+                <div className="card scan-history">
+                  <div className="panel-title">
+                    Analysis Diagnostics ({diagnostics.length})
+                  </div>
+                  <ul className="history-list">
+                    {diagnostics.slice(0, 20).map((d) => (
+                      <li key={d.id} className="history-item">
+                        <div className="history-status">
+                          [{d.severity}] {d.line !== null ? `L${d.line}` : '—'}
+                        </div>
+                        <div className="history-meta">{d.message}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>

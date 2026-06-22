@@ -28,6 +28,10 @@ refinery = { version = "0.8", features = ["rusqlite"] }
 thiserror = "1"
 walkdir = "2"
 dunce = "1"
+oxc_parser = "0.45"
+oxc_ast = "0.45"
+oxc_span = "0.45"
+oxc_allocator = "0.45"
 
 [dev-dependencies]
 tempfile = "3"

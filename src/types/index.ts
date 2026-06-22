@@ -92,3 +92,34 @@ export interface CommandResult<T> {
   data: T | null;
   error: string | null;
 }
+
+export interface ImportEntry {
+  id: number;
+  sourceFileId: number;
+  targetSpecifier: string;
+  resolvedTargetFileId: number | null;
+  importType: string;
+  isExternal: boolean;
+  startLine: number | null;
+  startColumn: number | null;
+}
+
+export interface AnalysisDiagnostic {
+  id: number;
+  fileId: number;
+  workspaceId: number;
+  severity: string;
+  message: string;
+  line: number | null;
+  column: number | null;
+  createdAt: number;
+}
+
+export interface AnalysisProgressEvent {
+  workspaceId: number;
+  status: string;
+  filesProcessed: number;
+  filesTotal: number;
+  filesParsed: number;
+  errorCount: number;
+}

@@ -1,4 +1,6 @@
+pub mod analysis;
 pub mod connection;
+pub mod imports;
 pub mod indexed_files;
 pub mod indexed_folders;
 pub mod scan_runs;

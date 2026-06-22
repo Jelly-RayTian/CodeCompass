@@ -106,3 +106,43 @@ pub struct ScanProgressEvent {
     pub error_count: i64,
     pub phase: Option<String>,
 }
+
+/// A single import relationship extracted by AST analysis.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportEntry {
+    pub id: i64,
+    pub source_file_id: i64,
+    pub target_specifier: String,
+    pub resolved_target_file_id: Option<i64>,
+    pub import_type: String,
+    pub is_external: bool,
+    pub start_line: Option<i64>,
+    pub start_column: Option<i64>,
+}
+
+/// A parse or analysis diagnostic.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalysisDiagnostic {
+    pub id: i64,
+    pub file_id: i64,
+    pub workspace_id: i64,
+    pub severity: String,
+    pub message: String,
+    pub line: Option<i64>,
+    pub column: Option<i64>,
+    pub created_at: i64,
+}
+
+/// Emitted by the analysis runner while it runs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalysisProgressEvent {
+    pub workspace_id: i64,
+    pub status: String,
+    pub files_processed: i64,
+    pub files_total: i64,
+    pub files_parsed: i64,
+    pub error_count: i64,
+}

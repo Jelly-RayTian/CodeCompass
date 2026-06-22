@@ -2,9 +2,11 @@ import { invoke, type InvokeArgs } from '@tauri-apps/api/core';
 
 import type {
   AddFolderResult,
+  AnalysisDiagnostic,
   ApplicationInfo,
   DatabaseStatus,
   FileEntry,
+  ImportEntry,
   IndexedFolder,
   ScanRun,
   ScanStatus,
@@ -73,5 +75,27 @@ export const tauriClient = {
 
   revealFolder(path: string): Promise<void> {
     return call<void>('reveal_folder', { path });
+  },
+
+  startAnalysis(workspaceId: number): Promise<void> {
+    return call<void>('start_analysis', { workspaceId });
+  },
+
+  cancelAnalysis(workspaceId: number): Promise<boolean> {
+    return call<boolean>('cancel_analysis', { workspaceId });
+  },
+
+  getFileImports(fileId: number): Promise<ImportEntry[]> {
+    return call<ImportEntry[]>('get_file_imports', { fileId });
+  },
+
+  getAnalysisDiagnostics(
+    workspaceId: number,
+    severity?: string,
+  ): Promise<AnalysisDiagnostic[]> {
+    return call<AnalysisDiagnostic[]>('get_analysis_diagnostics', {
+      workspaceId,
+      severity: severity ?? null,
+    });
   },
 } as const;

@@ -159,6 +159,16 @@ pub fn update_folder_scan_status(
     Ok(())
 }
 
+/// Updates the analysis status field on a folder.
+pub fn update_folder_analysis_status(db: &Database, id: i64, status: &str) -> Result<(), AppError> {
+    let conn = db.lock()?;
+    conn.execute(
+        "UPDATE workspaces SET scan_status = ?1 WHERE id = ?2",
+        params![status, id],
+    )?;
+    Ok(())
+}
+
 fn now_epoch_secs() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

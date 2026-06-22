@@ -47,7 +47,22 @@
 - Indexed file tree, selected-file metadata, scan summary, scan history
 - Rust tests for ignored dirs, unsupported files, empty repo, symlinks, traversal, cancellation, incremental changes
 
-## Milestone 3 — Structural Visualization
+## Milestone 3 — AST-based Import Analysis
+
+**Status:** Complete
+
+- Modular `LanguageAnalyzer` trait with `TypeScriptJavaScriptAnalyzer` implementation
+- OXC-based AST parsing for `.ts`, `.tsx`, `.js`, `.jsx`
+- Static imports, re-exports, dynamic imports, and CommonJS `require` extraction
+- Relative import resolution with `.ts/.tsx/.js/.jsx` and index-file fallback
+- External package detection (no `node_modules` traversal)
+- Parse diagnostics that don't stop repository-wide analysis
+- Persistent `imports` and `analysis_diagnostics` tables
+- Incremental invalidation via `analysis_status` on `indexed_files`
+- "Analyze" button and imports display in the Workspaces UI
+- Rust tests for parser, resolver, imports, and diagnostics across all supported languages
+
+## Milestone 4 — Structural Visualization
 
 **Status:** Not started
 
@@ -57,7 +72,17 @@
 - Graph filtering by language, file type, directory
 - Graph export (PNG/SVG)
 
-## Milestone 4 — Symbol Analysis
+## Milestone 4 — Structural Visualization
+
+**Status:** Not started
+
+- File dependency graph (interactive, zoomable)
+- Directory tree view
+- File detail panel (size, language, dependencies)
+- Graph filtering by language, file type, directory
+- Graph export (PNG/SVG)
+
+## Milestone 5 — Symbol Analysis
 
 **Status:** Not started
 
@@ -67,7 +92,7 @@
 - Call graph visualization
 - Search across symbols
 
-## Milestone 5 — Impact Analysis
+## Milestone 6 — Impact Analysis
 
 **Status:** Not started
 
@@ -76,7 +101,7 @@
 - Coupling and cohesion metrics
 - Hotspot detection (high-churn, high-coupling files)
 
-## Milestone 6 — Polish and Distribution
+## Milestone 7 — Polish and Distribution
 
 **Status:** Not started
 

@@ -12,7 +12,7 @@ use tauri::Manager;
 use db::scan_runs::mark_interrupted_runs;
 use db::Database;
 use platform::database_filename;
-use tasks::ScanManager;
+use tasks::{AnalysisManager, ScanManager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -42,10 +42,16 @@ pub fn run() {
 
             app.manage(database);
             app.manage(ScanManager::new());
+            app.manage(AnalysisManager::new());
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::analysis::start_analysis,
+            commands::analysis::cancel_analysis,
+            commands::analysis::get_file_imports,
+            commands::analysis::get_analysis_diagnostics,
+            commands::analysis::get_analyzed_files,
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::workspaces::list_workspaces,

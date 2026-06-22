@@ -177,6 +177,97 @@ pub fn get_file_details(db: &Database, file_id: i64) -> Result<Option<FileEntry>
     Ok(row)
 }
 
+/// Returns files ready for analysis (present, supported extension, pending or
+/// changed since last analysis). Each item is `(file_id, relative_path)`.
+pub fn get_files_for_analysis(
+    db: &Database,
+    workspace_id: i64,
+) -> Result<Vec<(i64, String)>, AppError> {
+    let conn = db.lock()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, relative_path FROM indexed_files \
+         WHERE workspace_id = ?1 AND is_present = 1 \
+         AND (analysis_status = 'pending' OR change_status IN ('new', 'changed')) \
+         AND extension IN ('ts', 'tsx', 'js', 'jsx')",
+    )?;
+    let rows = stmt.query_map(params![workspace_id], |row| Ok((row.get(0)?, row.get(1)?)))?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::Database)
+}
+
+/// Marks a file as having been successfully analysed.
+pub fn mark_file_analysis_done(db: &Database, file_id: i64, now: &i64) -> Result<(), AppError> {
+    let conn = db.lock()?;
+    conn.execute(
+        "UPDATE indexed_files SET analysis_status = 'analyzed', analyzed_at = ?1 WHERE id = ?2",
+        params![now, file_id],
+    )?;
+    Ok(())
+}
+
+/// Marks a file as having failed to parse.
+pub fn mark_file_parse_error(
+    db: &Database,
+    file_id: i64,
+    now: &i64,
+    _message: &str,
+) -> Result<(), AppError> {
+    let conn = db.lock()?;
+    conn.execute(
+        "UPDATE indexed_files SET analysis_status = 'parse_error', analyzed_at = ?1 WHERE id = ?2",
+        params![now, file_id],
+    )?;
+    Ok(())
+}
+
+/// Resets analysis status for all files in a workspace to 'pending'.
+pub fn mark_pending_analysis(db: &Database, workspace_id: i64) -> Result<(), AppError> {
+    let conn = db.lock()?;
+    conn.execute(
+        "UPDATE indexed_files SET analysis_status = 'pending', analyzed_at = NULL \
+         WHERE workspace_id = ?1",
+        params![workspace_id],
+    )?;
+    Ok(())
+}
+
+/// Lists recently analysed files for a workspace.
+pub fn list_recently_analyzed_files(
+    db: &Database,
+    workspace_id: i64,
+) -> Result<Vec<FileEntry>, AppError> {
+    let conn = db.lock()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, workspace_id, relative_path, name, parent_path, extension, \
+         size_bytes, created_at, modified_at, indexed_at, last_seen_at, \
+         fingerprint, previous_fingerprint, is_present, change_status \
+         FROM indexed_files \
+         WHERE workspace_id = ?1 AND analysis_status = 'analyzed' \
+         ORDER BY analyzed_at DESC LIMIT 500",
+    )?;
+    let rows = stmt.query_map(params![workspace_id], |row| {
+        Ok(FileEntry {
+            id: row.get(0)?,
+            workspace_id: row.get(1)?,
+            relative_path: row.get(2)?,
+            name: row.get(3)?,
+            parent_path: row.get(4)?,
+            extension: row.get(5)?,
+            size_bytes: row.get(6)?,
+            created_at: row.get(7)?,
+            modified_at: row.get(8)?,
+            indexed_at: row.get(9)?,
+            last_seen_at: row.get(10)?,
+            fingerprint: row.get(11)?,
+            previous_fingerprint: row.get(12)?,
+            is_present: row.get::<_, i64>(13)? != 0,
+            change_status: row.get(14)?,
+        })
+    })?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::Database)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

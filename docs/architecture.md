@@ -44,16 +44,16 @@ directly. All data access goes through `tauriClient`.
 
 ### Rust Backend (`src-tauri/src/`)
 
-| Module      | Responsibility                                                         |
-| ----------- | ---------------------------------------------------------------------- |
-| `commands/` | `#[tauri::command]` functions — thin wrappers, no business logic       |
-| `db/`       | `Database` struct, migration runner, indexed-folder/file/scan-run DAOs |
-| `models/`   | Serde structs mirroring frontend types                                 |
-| `error.rs`  | `AppError` enum with `thiserror` + `serde::Serialize`                  |
-| `platform/` | Path normalization and platform-aware path comparisons                 |
-| `scanner/`  | Recursive metadata-only directory traversal                            |
-| `tasks/`    | `ScanManager` for cancellation tokens of in-progress scans             |
-| `analysis/` | Code analysis (reserved for future milestones)                         |
+| Module      | Responsibility                                                               |
+| ----------- | ---------------------------------------------------------------------------- |
+| `commands/` | `#[tauri::command]` functions — thin wrappers, no business logic             |
+| `db/`       | `Database` struct, migration runner, indexed-folder/file/scan-run DAOs       |
+| `models/`   | Serde structs mirroring frontend types                                       |
+| `error.rs`  | `AppError` enum with `thiserror` + `serde::Serialize`                        |
+| `platform/` | Path normalization and platform-aware path comparisons                       |
+| `scanner/`  | Recursive metadata-only directory traversal                                  |
+| `tasks/`    | `ScanManager` and `AnalysisManager` for cancellation tokens                  |
+| `analysis/` | Code analysis: `LanguageAnalyzer` trait, TS/JS parser (oxc), import resolver |
 
 **Key rule:** Commands delegate to core logic. `commands/workspaces.rs` calls
 `fetch_indexed_folders(&db)`, not the other way around. This keeps the core

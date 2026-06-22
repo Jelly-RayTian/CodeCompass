@@ -46,6 +46,9 @@ pub enum AppError {
 
     #[error("Path traversal detected: {0}")]
     PathTraversal(String),
+
+    #[error("Analysis already running for workspace {0}")]
+    AnalysisAlreadyRunning(i64),
 }
 
 impl serde::Serialize for AppError {

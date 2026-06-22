@@ -22,11 +22,12 @@ The directory is created on first launch if it does not exist.
 Migrations live in `src-tauri/migrations/` and follow the refinery naming
 convention: `V{n}__{name}.sql`.
 
-| File                                          | Description                                                         |
-| --------------------------------------------- | ------------------------------------------------------------------- |
-| `V1__initial_schema.sql`                      | Creates the four initial tables and indexes                         |
-| `V2__indexed_folders_and_scan_runs.sql`       | Adds indexed-folder metadata columns, scan-run table, file metadata |
-| `V3__file_fingerprints_and_present_state.sql` | Adds file fingerprints, present/deleted state, and change tracking  |
+| File                                          | Description                                                                      |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| `V1__initial_schema.sql`                      | Creates the four initial tables and indexes                                      |
+| `V2__indexed_folders_and_scan_runs.sql`       | Adds indexed-folder metadata columns, scan-run table, file metadata              |
+| `V3__file_fingerprints_and_present_state.sql` | Adds file fingerprints, present/deleted state, and change tracking               |
+| `V4__import_relationships.sql`                | Adds imports table, analysis_diagnostics table, analysis status on indexed_files |
 
 Migrations are applied automatically when `Database::open` is called (at
 application startup). Refinery tracks applied migrations in the
@@ -114,6 +115,44 @@ A single analysis pass over a workspace (reserved for future milestones).
 | `started_at`    | INTEGER | NOT NULL (Unix epoch)                 |
 | `completed_at`  | INTEGER | nullable                              |
 | `error_message` | TEXT    | nullable                              |
+
+### `imports`
+
+Statically analysed import relationships between source files.
+
+| Column                    | Type    | Constraints                               |
+| ------------------------- | ------- | ----------------------------------------- |
+| `id`                      | INTEGER | PRIMARY KEY AUTOINCREMENT                 |
+| `source_file_id`          | INTEGER | NOT NULL, FK → indexed_files(id) CASCADE  |
+| `target_specifier`        | TEXT    | NOT NULL                                  |
+| `resolved_target_file_id` | INTEGER | nullable, FK → indexed_files(id) SET NULL |
+| `import_type`             | TEXT    | NOT NULL                                  |
+| `is_external`             | INTEGER | NOT NULL DEFAULT 0                        |
+| `start_line`              | INTEGER | nullable                                  |
+| `start_column`            | INTEGER | nullable                                  |
+| `created_at`              | INTEGER | NOT NULL (Unix epoch)                     |
+
+### `analysis_diagnostics`
+
+Parse or resolution diagnostics from AST analysis.
+
+| Column         | Type    | Constraints                              |
+| -------------- | ------- | ---------------------------------------- |
+| `id`           | INTEGER | PRIMARY KEY AUTOINCREMENT                |
+| `file_id`      | INTEGER | NOT NULL, FK → indexed_files(id) CASCADE |
+| `workspace_id` | INTEGER | NOT NULL, FK → workspaces(id) CASCADE    |
+| `severity`     | TEXT    | NOT NULL                                 |
+| `message`      | TEXT    | NOT NULL                                 |
+| `line`         | INTEGER | nullable                                 |
+| `column`       | INTEGER | nullable                                 |
+| `created_at`   | INTEGER | NOT NULL (Unix epoch)                    |
+
+### `indexed_files` (analysis columns added in V4)
+
+| Column            | Type    | Constraints                |
+| ----------------- | ------- | -------------------------- |
+| `analyzed_at`     | INTEGER | nullable (Unix epoch)      |
+| `analysis_status` | TEXT    | NOT NULL DEFAULT 'pending' |
 
 ### `app_settings`
 
