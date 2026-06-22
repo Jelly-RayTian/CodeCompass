@@ -54,6 +54,6 @@ describe('App', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(screen.getByRole('link', { name: /settings/i }));
-    expect(await screen.findByText('Application name')).toBeInTheDocument();
+    expect(await screen.findByText('Database Status')).toBeInTheDocument();
   });
 });

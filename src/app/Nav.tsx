@@ -1,19 +1,23 @@
 import { NavLink } from 'react-router-dom';
 
+import { useT } from '@/i18n/LanguageContext';
+
 interface NavItem {
   to: string;
   label: string;
   icon: string;
 }
 
-const navItems: NavItem[] = [
-  { to: '/', label: 'Home', icon: '\u2302' },
-  { to: '/workspaces', label: 'Workspaces', icon: '\u{1F4C1}' },
-  { to: '/graph', label: 'Graph', icon: '\u{1F578}' },
-  { to: '/settings', label: 'Settings', icon: '\u2699' },
-];
-
 export function Nav(): JSX.Element {
+  const { t, lang, setLang } = useT();
+
+  const navItems: NavItem[] = [
+    { to: '/', label: t.nav.home, icon: '\u2302' },
+    { to: '/workspaces', label: t.nav.workspaces, icon: '\u{1F4C1}' },
+    { to: '/graph', label: t.nav.graph, icon: '\u{1F578}' },
+    { to: '/settings', label: t.nav.settings, icon: '\u2699' },
+  ];
+
   return (
     <nav className="app-nav" aria-label="Main navigation">
       {navItems.map((item) => (
@@ -31,6 +35,15 @@ export function Nav(): JSX.Element {
           <span>{item.label}</span>
         </NavLink>
       ))}
+
+      <button
+        className="nav-item lang-toggle"
+        onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
+        type="button"
+        title={lang === 'en' ? 'Switch to Chinese' : '切换到英文'}
+      >
+        {lang === 'en' ? '中文' : 'EN'}
+      </button>
     </nav>
   );
 }

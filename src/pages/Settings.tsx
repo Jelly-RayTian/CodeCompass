@@ -1,55 +1,56 @@
 import { tauriClient } from '@/lib/tauriClient';
 import { useAsyncData } from '@/lib/useAsyncData';
-import type { ApplicationInfo } from '@/types';
+import type { DatabaseStatus } from '@/types';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
+import { useT } from '@/i18n/LanguageContext';
 
 export function Settings(): JSX.Element {
-  const [state, reload] = useAsyncData<ApplicationInfo>(() =>
-    tauriClient.getApplicationInfo(),
+  const { t } = useT();
+  const [state, reload] = useAsyncData<DatabaseStatus>(() =>
+    tauriClient.getDatabaseStatus(),
   );
 
   if (state.status === 'loading') {
-    return <LoadingState label="Loading settings\u2026" />;
+    return <LoadingState label={t.general.loading} />;
   }
 
   if (state.status === 'error') {
     return (
       <ErrorState
-        title="Failed to load settings"
+        title={t.settings.title}
         description={state.message}
         onRetry={reload}
       />
     );
   }
 
-  const { name, version, buildTimestamp } = state.data;
+  const db = state.data;
 
   return (
     <>
-      <h1 className="page-title">Settings</h1>
-      <p className="page-subtitle">Application information and preferences.</p>
+      <h1 className="page-title">{t.settings.title}</h1>
+      <p className="page-subtitle">{t.settings.subtitle}</p>
 
       <div className="card">
-        <div className="card-label">Application name</div>
-        <div className="card-value">{name}</div>
-      </div>
-
-      <div className="card">
-        <div className="card-label">Version</div>
-        <div className="card-value">{version}</div>
-      </div>
-
-      <div className="card">
-        <div className="card-label">Build timestamp</div>
-        <div className="card-value">{buildTimestamp}</div>
-      </div>
-
-      <div className="card">
-        <div className="card-label">Preferences</div>
-        <div className="card-value" style={{ color: 'var(--cc-text-muted)' }}>
-          Configurable preferences will appear here in a future milestone.
+        <div className="card-label">{t.settings.databaseStatus}</div>
+        <div className="card-value">
+          <span
+            className={`status-dot ${db.connected ? 'connected' : 'disconnected'}`}
+            aria-hidden="true"
+          />
+          {db.connected ? t.settings.connected : t.settings.notConnected}
         </div>
+      </div>
+
+      <div className="card">
+        <div className="card-label">{t.settings.path}</div>
+        <div className="card-value">{db.databasePath}</div>
+      </div>
+
+      <div className="card">
+        <div className="card-label">{t.settings.migrationVersion}</div>
+        <div className="card-value">v{db.migrationVersion}</div>
       </div>
     </>
   );

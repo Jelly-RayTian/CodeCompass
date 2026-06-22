@@ -18,6 +18,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { SymbolSearch } from '@/components/SymbolSearch';
+import { useT } from '@/i18n/LanguageContext';
 
 function formatTimestamp(epochSeconds: number | null | undefined): string {
   if (epochSeconds === null || epochSeconds === undefined) {
@@ -156,6 +157,7 @@ function TreeNodeView({
 
 export function Workspaces(): JSX.Element {
   const navigate = useNavigate();
+  const { t } = useT();
   const [foldersState, reloadFolders] = useAsyncData<IndexedFolder[]>(() =>
     tauriClient.listIndexedFolders(),
   );
@@ -454,13 +456,13 @@ export function Workspaces(): JSX.Element {
   };
 
   if (foldersState.status === 'loading') {
-    return <LoadingState label="Loading indexed folders\u2026" />;
+    return <LoadingState label={t.general.loading} />;
   }
 
   if (foldersState.status === 'error') {
     return (
       <ErrorState
-        title="Failed to load indexed folders"
+        title={t.workspaces.loadError}
         description={foldersState.message}
         onRetry={reloadFolders}
       />
@@ -472,10 +474,8 @@ export function Workspaces(): JSX.Element {
 
   return (
     <>
-      <h1 className="page-title">Indexed Folders</h1>
-      <p className="page-subtitle">
-        Folders you have registered for local metadata scanning.
-      </p>
+      <h1 className="page-title">{t.workspaces.title}</h1>
+      <p className="page-subtitle">{t.workspaces.subtitle}</p>
 
       <div className="toolbar">
         <button
@@ -483,7 +483,7 @@ export function Workspaces(): JSX.Element {
           onClick={handleAddFolder}
           type="button"
         >
-          Add folder
+          {t.workspaces.addFolder}
         </button>
       </div>
 
