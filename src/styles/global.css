@@ -709,3 +709,69 @@ a {
   outline: none;
   border-color: var(--cc-accent);
 }
+
+/* ── Symbol search ── */
+.symbol-search {
+  margin-top: 16px;
+}
+
+.symbol-result-count {
+  font-size: 11px;
+  color: var(--cc-text-muted);
+  margin-bottom: 8px;
+}
+
+.symbol-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.symbol-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--cc-border);
+  font-size: 12px;
+}
+
+.symbol-item:last-child {
+  border-bottom: none;
+}
+
+.symbol-kind-badge {
+  background: var(--cc-surface-hover);
+  color: var(--cc-text-muted);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.symbol-name {
+  font-family: var(--cc-mono);
+  font-weight: 500;
+  flex: 1;
+}
+
+.symbol-exported {
+  color: var(--cc-success);
+  font-size: 10px;
+}
+
+.symbol-location {
+  color: var(--cc-text-muted);
+  font-family: var(--cc-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.symbol-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 8px;
+}

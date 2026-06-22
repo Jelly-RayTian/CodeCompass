@@ -11,6 +11,8 @@ import type {
   IndexedFolder,
   ScanRun,
   ScanStatus,
+  SymbolEntry,
+  SymbolSearchResult,
 } from '@/types';
 
 /**
@@ -102,5 +104,25 @@ export const tauriClient = {
 
   getDependencyGraph(workspaceId: number): Promise<DependencyGraph> {
     return call<DependencyGraph>('get_dependency_graph', { workspaceId });
+  },
+
+  searchSymbols(
+    workspaceId: number,
+    query?: string,
+    kind?: string,
+    page?: number,
+    pageSize?: number,
+  ): Promise<SymbolSearchResult> {
+    return call<SymbolSearchResult>('search_symbols_command', {
+      workspaceId,
+      query: query ?? null,
+      kind: kind ?? null,
+      page: page ?? 1,
+      pageSize: pageSize ?? 20,
+    });
+  },
+
+  getFileOutline(fileId: number): Promise<SymbolEntry[]> {
+    return call<SymbolEntry[]>('get_file_outline_command', { fileId });
   },
 } as const;

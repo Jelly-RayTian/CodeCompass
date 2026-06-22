@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use tauri::{AppHandle, Emitter};
 
+use crate::analysis::symbols::extract_symbols;
 use crate::analysis::LanguageAnalyzer;
 use crate::analysis::TypeScriptJavaScriptAnalyzer;
 use crate::db::analysis::{clear_workspace_diagnostics, upsert_file_diagnostics};
@@ -11,6 +12,7 @@ use crate::db::indexed_files::{
     get_files_for_analysis, mark_file_analysis_done, mark_file_parse_error, mark_pending_analysis,
 };
 use crate::db::indexed_folders::update_folder_analysis_status;
+use crate::db::symbols::{clear_workspace_symbols, replace_file_symbols};
 use crate::db::Database;
 use crate::error::AppError;
 use crate::models::AnalysisProgressEvent;
@@ -42,6 +44,7 @@ pub fn run_analysis(
     // Clear previous analysis results.
     clear_workspace_imports(db, workspace_id)?;
     clear_workspace_diagnostics(db, workspace_id)?;
+    clear_workspace_symbols(db, workspace_id)?;
     mark_pending_analysis(db, workspace_id)?;
 
     let files = get_files_for_analysis(db, workspace_id)?;
@@ -101,6 +104,9 @@ pub fn run_analysis(
 
         if success {
             replace_file_imports(db, *file_id, &result.imports, now)?;
+            // Extract symbols from the same source.
+            let symbols = extract_symbols(&source, &absolute_path);
+            replace_file_symbols(db, *file_id, workspace_id, &symbols, now)?;
             parsed += 1;
         }
 

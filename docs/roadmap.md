@@ -86,15 +86,20 @@
 - Summary bar: total files, imports, graph nodes, cycle count
 - Rust tests for graph construction, edge direction, cycles, isolated nodes
 
-## Milestone 5 — Symbol Analysis
+## Milestone 5 — Symbol Indexing and Search
 
-**Status:** Not started
+**Status:** Complete
 
-- Symbol extraction (functions, classes, methods, imports)
-- Symbol-level dependency graph
-- Entry point detection (main functions, exported APIs)
-- Call graph visualization
-- Search across symbols
+- OXC-based symbol extraction: functions, classes, methods, interfaces, types, enums, variables, React components
+- V5 database migration: `symbols` table with source locations, parent hierarchy, visibility, export state
+- Symbol search with pagination and kind/name filters
+- File outline via `get_file_outline` command
+- Symbol extraction integrated into analysis pipeline (runs with Analyze)
+- Incremental replacement: file symbols deleted and re-inserted on re-analysis
+- Symbol Search UI component with filter dropdowns and pagination
+- Rust tests for all symbol kinds, source locations, malformed input
+
+## Milestone 6 — Impact Analysis
 
 ## Milestone 6 — Impact Analysis
 

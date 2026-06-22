@@ -16,6 +16,7 @@ import type {
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
+import { SymbolSearch } from '@/components/SymbolSearch';
 
 function formatTimestamp(epochSeconds: number | null | undefined): string {
   if (epochSeconds === null || epochSeconds === undefined) {
@@ -796,6 +797,8 @@ export function Workspaces(): JSX.Element {
                   </ul>
                 </div>
               )}
+
+              <SymbolSearch workspaceId={selectedFolderId} />
             </div>
           </div>
         </div>

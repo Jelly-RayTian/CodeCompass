@@ -56,6 +56,8 @@ pub fn run() {
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::graph::get_dependency_graph,
+            commands::symbols::search_symbols_command,
+            commands::symbols::get_file_outline_command,
             commands::workspaces::list_workspaces,
             commands::workspaces::pick_folder,
             commands::workspaces::add_folder,

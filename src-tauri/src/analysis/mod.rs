@@ -1,6 +1,7 @@
 pub mod graph;
 pub mod resolver;
 pub mod runner;
+pub mod symbols;
 pub mod ts_js;
 
 pub use runner::run_analysis;
