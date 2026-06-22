@@ -72,15 +72,19 @@
 - Graph filtering by language, file type, directory
 - Graph export (PNG/SVG)
 
-## Milestone 4 — Structural Visualization
+## Milestone 4 — File Dependency Graph Visualization
 
-**Status:** Not started
+**Status:** Complete
 
-- File dependency graph (interactive, zoomable)
-- Directory tree view
-- File detail panel (size, language, dependencies)
-- Graph filtering by language, file type, directory
-- Graph export (PNG/SVG)
+- Rust graph builder from persisted imports table
+- Nodes (files) with incoming/outgoing edge counts, isolated-node handling
+- Directed edges representing import relationships
+- Circular dependency detection with explicit evidence
+- React Flow interactive visualization with zoom, pan, fit-to-view
+- Node selection with file details panel (imports, imported-by, diagnostics)
+- Filename filter, cycle warnings, large-graph limit (500 nodes)
+- Summary bar: total files, imports, graph nodes, cycle count
+- Rust tests for graph construction, edge direction, cycles, isolated nodes
 
 ## Milestone 5 — Symbol Analysis
 

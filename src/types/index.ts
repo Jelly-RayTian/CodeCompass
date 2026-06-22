@@ -93,6 +93,8 @@ export interface CommandResult<T> {
   error: string | null;
 }
 
+export type { CycleInfo, DependencyGraph, GraphEdge, GraphNode } from './graph';
+
 export interface ImportEntry {
   id: number;
   sourceFileId: number;

@@ -1,3 +1,4 @@
+pub mod graph;
 pub mod resolver;
 pub mod runner;
 pub mod ts_js;

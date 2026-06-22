@@ -5,6 +5,7 @@ import type {
   AnalysisDiagnostic,
   ApplicationInfo,
   DatabaseStatus,
+  DependencyGraph,
   FileEntry,
   ImportEntry,
   IndexedFolder,
@@ -97,5 +98,9 @@ export const tauriClient = {
       workspaceId,
       severity: severity ?? null,
     });
+  },
+
+  getDependencyGraph(workspaceId: number): Promise<DependencyGraph> {
+    return call<DependencyGraph>('get_dependency_graph', { workspaceId });
   },
 } as const;

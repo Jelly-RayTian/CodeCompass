@@ -621,3 +621,91 @@ a {
 .folder-card.selected {
   border-color: var(--cc-accent);
 }
+
+/* ── Graph page ── */
+.graph-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.graph-page .toolbar select,
+.graph-page .toolbar .input {
+  margin: 0 8px 8px 0;
+}
+
+.graph-summary {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--cc-text-muted);
+  margin-bottom: 12px;
+  font-family: var(--cc-mono);
+}
+
+.graph-cycle-warn {
+  color: #f0b05b;
+}
+
+.cycle-path {
+  font-family: var(--cc-mono);
+  font-size: 12px;
+  padding: 2px 0;
+  color: var(--cc-text-muted);
+}
+
+.graph-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .graph-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.graph-canvas {
+  background: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  height: 520px;
+}
+
+.graph-detail {
+  background: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  padding: 16px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.detail-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cc-text-muted);
+  margin: 12px 0 6px;
+}
+
+.select,
+.input {
+  background: var(--cc-surface);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  color: var(--cc-text);
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--cc-accent);
+}

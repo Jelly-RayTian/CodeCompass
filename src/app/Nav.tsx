@@ -9,6 +9,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/', label: 'Home', icon: '\u2302' },
   { to: '/workspaces', label: 'Workspaces', icon: '\u{1F4C1}' },
+  { to: '/graph', label: 'Graph', icon: '\u{1F578}' },
   { to: '/settings', label: 'Settings', icon: '\u2699' },
 ];
 

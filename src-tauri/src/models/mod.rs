@@ -146,3 +146,6 @@ pub struct AnalysisProgressEvent {
     pub files_parsed: i64,
     pub error_count: i64,
 }
+
+/// Re-export graph types from the analysis module.
+pub use crate::analysis::graph::{CycleInfo, DependencyGraph, GraphEdge, GraphNode};
