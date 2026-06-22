@@ -103,6 +103,22 @@ fn is_uppercase_first(s: &str) -> bool {
     s.chars().next().map_or(false, |c| c.is_ascii_uppercase())
 }
 
+fn body_contains_jsx(source: &str, start: usize, end: usize) -> bool {
+    let end = end.min(source.len());
+    let snippet = &source[start..end];
+    // Look for JSX patterns: <div, </, <>, <Component
+    let bytes = snippet.as_bytes();
+    for i in 0..bytes.len().saturating_sub(1) {
+        if bytes[i] == b'<' {
+            let next = bytes.get(i + 1).copied().unwrap_or(0);
+            if next.is_ascii_alphabetic() || next == b'/' || next == b'>' {
+                return true;
+            }
+        }
+    }
+    false
+}
+
 impl<'a> Visit<'a> for SymbolVisitor<'a> {
     fn enter_node(&mut self, kind: AstKind<'a>) {
         match kind {
@@ -111,8 +127,11 @@ impl<'a> Visit<'a> for SymbolVisitor<'a> {
                 if let Some(name) = name {
                     let (sl, sc, el, ec) = span_pos(self.source_text, func.span);
                     let is_react = is_uppercase_first(&name)
-                        && self.source_text[func.span.start as usize..func.span.end as usize]
-                            .contains('<');
+                        && body_contains_jsx(
+                            self.source_text,
+                            func.span.start as usize,
+                            func.span.end as usize,
+                        );
                     self.symbols.push(SymbolRecord {
                         name: name.clone(),
                         kind: if is_react {

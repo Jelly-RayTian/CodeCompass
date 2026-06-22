@@ -85,7 +85,7 @@ pub fn replace_file_symbols(
         conn.execute(
             "UPDATE symbols SET parent_symbol_id = (\
              SELECT id FROM symbols \
-             WHERE file_id = ?1 AND name = ?2 AND id != ?3 \
+             WHERE file_id = ?1 AND name = ?2 AND kind = 'class' AND id != ?3 \
              ORDER BY id DESC LIMIT 1\
              ) WHERE id = ?3",
             params![file_id, parent_name, child_id],

@@ -52,19 +52,11 @@ pub fn replace_file_imports(
 
 /// Try to find the `indexed_files.id` for an absolute path. Returns an error
 /// if none matches (the file may be outside the workspace or not indexed).
+#[allow(dead_code)]
 fn resolve_file_id_strict(
     conn: &rusqlite::Connection,
     path: &std::path::Path,
 ) -> Result<i64, AppError> {
-    let _normalized = path.to_string_lossy().to_string();
-    // We need to match by joining the workspace's root path + relative_path.
-    // The simplest approximation: the path's parent directory plus filename
-    // should match a workspace root. But we don't have workspace_id here.
-    // Instead, we store the resolution by looking up indexed_files that have
-    // a matching relative_path when combined with their workspace root.
-    //
-    // For now, we do a simpler look-up: find a file whose extension matches
-    // and whose name + parent_path roughly align. This is best-effort.
     let file_name = path
         .file_name()
         .map(|n| n.to_string_lossy().to_string())

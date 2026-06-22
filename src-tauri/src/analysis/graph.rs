@@ -256,7 +256,7 @@ mod tests {
         use crate::db::indexed_files::FileUpsert;
         let mut batch = vec![FileUpsert {
             relative_path: rel.to_string(),
-            name: rel.split('/').last().unwrap_or(rel).to_string(),
+            name: rel.split('/').next_back().unwrap_or(rel).to_string(),
             parent_path: ".".to_string(),
             extension: Some("ts".to_string()),
             size_bytes: 100,

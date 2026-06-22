@@ -151,9 +151,17 @@ export function Graph(): JSX.Element {
         };
         if (filter && !data.path.toLowerCase().includes(filter.toLowerCase()))
           return false;
+        if (
+          folderFilter &&
+          !data.path
+            .toLowerCase()
+            .includes('/' + folderFilter.toLowerCase() + '/') &&
+          !data.path.toLowerCase().startsWith(folderFilter.toLowerCase() + '/')
+        )
+          return false;
         return true;
       }),
-    [nodes, filter],
+    [nodes, filter, folderFilter],
   );
 
   const filteredEdges = useMemo(() => {
