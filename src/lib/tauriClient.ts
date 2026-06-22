@@ -11,6 +11,7 @@ import type {
   IndexedFolder,
   ScanRun,
   ScanStatus,
+  SourceFile,
   SymbolEntry,
   SymbolSearchResult,
 } from '@/types';
@@ -124,5 +125,15 @@ export const tauriClient = {
 
   getFileOutline(fileId: number): Promise<SymbolEntry[]> {
     return call<SymbolEntry[]>('get_file_outline_command', { fileId });
+  },
+
+  readSourceFile(
+    workspaceId: number,
+    relativePath: string,
+  ): Promise<SourceFile> {
+    return call<SourceFile>('read_source_file', {
+      workspaceId,
+      relativePath,
+    });
   },
 } as const;

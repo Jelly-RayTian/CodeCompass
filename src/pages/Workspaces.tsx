@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listen } from '@tauri-apps/api/event';
 
 import { tauriClient } from '@/lib/tauriClient';
@@ -154,6 +155,7 @@ function TreeNodeView({
 }
 
 export function Workspaces(): JSX.Element {
+  const navigate = useNavigate();
   const [foldersState, reloadFolders] = useAsyncData<IndexedFolder[]>(() =>
     tauriClient.listIndexedFolders(),
   );
@@ -725,6 +727,20 @@ export function Workspaces(): JSX.Element {
                         {selectedFile.changeStatus}
                       </span>
                     </div>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ marginTop: 8, width: '100%' }}
+                      onClick={() =>
+                        navigate(
+                          `/viewer?workspaceId=${selectedFolderId}&path=${encodeURIComponent(
+                            selectedFile.relativePath,
+                          )}`,
+                        )
+                      }
+                      type="button"
+                    >
+                      View source
+                    </button>
                   </div>
 
                   {fileImports !== null && (

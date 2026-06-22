@@ -775,3 +775,93 @@ a {
   margin-top: 8px;
   gap: 8px;
 }
+
+/* ── Viewer / Code viewer ── */
+.viewer-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+}
+
+.viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.viewer-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewer-path {
+  font-family: var(--cc-mono);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.viewer-meta {
+  font-size: 12px;
+  color: var(--cc-text-muted);
+}
+
+.viewer-layout {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 960px) {
+  .viewer-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.viewer-main {
+  min-height: 0;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  overflow: hidden;
+}
+
+.viewer-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.code-viewer {
+  height: 100%;
+  min-height: 400px;
+}
+
+.code-viewer-error {
+  margin: 0;
+}
+
+.ref-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  font-family: var(--cc-mono);
+}
+
+.ref-list li {
+  padding: 3px 0;
+  color: var(--cc-text-muted);
+}
+
+.symbol-item-clickable {
+  cursor: pointer;
+}
+
+.symbol-item-clickable:hover {
+  background: var(--cc-surface-hover);
+}

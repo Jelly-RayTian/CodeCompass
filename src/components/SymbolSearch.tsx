@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { tauriClient } from '@/lib/tauriClient';
 import type { SymbolEntry } from '@/types';
@@ -19,6 +20,7 @@ const KIND_OPTIONS = [
 ];
 
 export function SymbolSearch({ workspaceId }: SymbolSearchProps): JSX.Element {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('');
   const [results, setResults] = useState<SymbolEntry[]>([]);
@@ -100,7 +102,27 @@ export function SymbolSearch({ workspaceId }: SymbolSearchProps): JSX.Element {
           </div>
           <ul className="symbol-list">
             {results.map((sym) => (
-              <li key={sym.id} className="symbol-item">
+              <li
+                key={sym.id}
+                className="symbol-item symbol-item-clickable"
+                onClick={() =>
+                  navigate(
+                    `/viewer?workspaceId=${workspaceId}&path=${encodeURIComponent(
+                      sym.relativePath ?? '',
+                    )}&line=${sym.sourceLine}`,
+                  )
+                }
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter')
+                    navigate(
+                      `/viewer?workspaceId=${workspaceId}&path=${encodeURIComponent(
+                        sym.relativePath ?? '',
+                      )}&line=${sym.sourceLine}`,
+                    );
+                }}
+              >
                 <span className="symbol-kind-badge">{sym.kind}</span>
                 <span className="symbol-name">{sym.name}</span>
                 {sym.isExported && (

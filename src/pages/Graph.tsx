@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Background,
   Controls,
@@ -98,6 +99,7 @@ interface SelectedFileDetail {
 }
 
 export function Graph(): JSX.Element {
+  const navigate = useNavigate();
   const [foldersState] = useAsyncData<IndexedFolder[]>(() =>
     tauriClient.listIndexedFolders(),
   );
@@ -336,6 +338,21 @@ export function Graph(): JSX.Element {
                   <span>Path</span>
                   <span>{selectedDetail.path}</span>
                 </div>
+
+                <button
+                  className="btn btn-secondary"
+                  style={{ marginTop: 8, width: '100%' }}
+                  onClick={() =>
+                    navigate(
+                      `/viewer?workspaceId=${selectedFolderId}&path=${encodeURIComponent(
+                        selectedDetail.path,
+                      )}`,
+                    )
+                  }
+                  type="button"
+                >
+                  View source
+                </button>
 
                 <h4 className="detail-label">
                   Imports ({selectedDetail.imports.length})
