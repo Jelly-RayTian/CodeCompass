@@ -13,6 +13,7 @@ use super::resolver::resolve_import;
 
 /// A single import relationship extracted from source code.
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ImportRecord {
     pub source_file_id: i64,
     pub target_specifier: String,

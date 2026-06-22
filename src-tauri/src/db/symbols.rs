@@ -177,7 +177,7 @@ pub fn search_symbols(
         param_idx + 1
     );
 
-    let mut total: i64 = match (query, kind_filter) {
+    let total: i64 = match (query, kind_filter) {
         (Some(q), Some(k)) if !q.trim().is_empty() && !k.trim().is_empty() => conn.query_row(
             &count_sql,
             params![workspace_id, format!("%{}%", q), k],

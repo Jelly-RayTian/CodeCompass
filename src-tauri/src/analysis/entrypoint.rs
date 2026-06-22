@@ -47,7 +47,7 @@ pub fn detect_entry_points(db: &Database, workspace_id: i64) -> Result<Vec<Entry
     }
 
     let mut candidates: Vec<EntryPoint> = Vec::new();
-    let total_out: f64 = out_degree.values().sum::<i64>() as f64;
+    let _total_out: f64 = out_degree.values().sum::<i64>() as f64;
 
     for (id, rel_path, name, _ext) in &files {
         let mut reasons: Vec<String> = Vec::new();
@@ -143,7 +143,7 @@ pub fn detect_entry_points(db: &Database, workspace_id: i64) -> Result<Vec<Entry
     }
 
     // Sort by confidence descending, at most 10 candidates.
-    candidates.sort_by(|a, b| b.confidence.partial_cmp(&a.confidence).unwrap());
+    candidates.sort_by(|a, b| b.confidence.total_cmp(&a.confidence));
     candidates.truncate(10);
 
     Ok(candidates)

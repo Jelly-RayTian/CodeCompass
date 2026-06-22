@@ -74,13 +74,13 @@ pub fn generate_reading_path(
     // If no entry points provided, start with files that have high in-degree.
     if entry_file_ids.is_empty() {
         let mut in_deg: HashMap<i64, i64> = HashMap::new();
-        for (_, targets) in &adj {
+        for targets in adj.values() {
             for t in targets {
                 *in_deg.entry(*t).or_insert(0) += 1;
             }
         }
         let mut top: Vec<(i64, i64)> = in_deg.into_iter().collect();
-        top.sort_by(|a, b| b.1.cmp(&a.1));
+        top.sort_by_key(|b| std::cmp::Reverse(b.1));
         for (id, _) in top.iter().take(3) {
             if visited.insert(*id) {
                 let (path, name) = file_info.get(id).cloned().unwrap_or_default();

@@ -17,6 +17,7 @@ pub use ts_js::{parse_file as parse_ts_js_file, ImportRecord, ParseDiagnostic, P
 ///
 /// Implementations parse source files and produce import records,
 /// diagnostics, and any language-specific metadata.
+#[allow(dead_code)]
 pub trait LanguageAnalyzer: Send + Sync {
     /// Returns the file extensions this analyzer handles (e.g. `["ts",
     /// "tsx", "js", "jsx"]`).

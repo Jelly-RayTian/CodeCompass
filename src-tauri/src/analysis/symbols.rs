@@ -23,6 +23,7 @@ pub struct SymbolRecord {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum SymbolKind {
     Function,
     Class,
@@ -48,6 +49,7 @@ impl SymbolKind {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum Visibility {
     Public,
     Private,
@@ -100,7 +102,7 @@ fn span_pos(source: &str, span: Span) -> (i64, i64, i64, i64) {
 }
 
 fn is_uppercase_first(s: &str) -> bool {
-    s.chars().next().map_or(false, |c| c.is_ascii_uppercase())
+    s.chars().next().is_some_and(|c| c.is_ascii_uppercase())
 }
 
 fn body_contains_jsx(source: &str, start: usize, end: usize) -> bool {
@@ -136,8 +138,6 @@ impl<'a> Visit<'a> for SymbolVisitor<'a> {
                         name: name.clone(),
                         kind: if is_react {
                             SymbolKind::ReactComponent
-                        } else if self.class_name.is_some() {
-                            SymbolKind::Function
                         } else {
                             SymbolKind::Function
                         },
@@ -224,7 +224,7 @@ impl<'a> Visit<'a> for SymbolVisitor<'a> {
                     let name = id.name.to_string();
                     if decl.init.is_some() {
                         let (sl, sc, el, ec) = span_pos(self.source_text, decl.span);
-                        let is_arrow = decl.init.as_ref().map_or(false, |init| {
+                        let is_arrow = decl.init.as_ref().is_some_and(|init| {
                             matches!(init, oxc_ast::ast::Expression::ArrowFunctionExpression(_))
                         });
                         if is_arrow {

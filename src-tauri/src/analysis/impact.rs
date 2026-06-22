@@ -44,7 +44,7 @@ pub fn compute_impact(
     let conn = db.lock()?;
 
     // Get symbol info.
-    let (sym_name, sym_kind, sym_path, is_exported): (String, String, String, bool) = conn
+    let (sym_name, sym_kind, _sym_path, is_exported): (String, String, String, bool) = conn
         .query_row(
             "SELECT s.name, s.kind, f.relative_path, s.is_exported \
              FROM symbols s JOIN indexed_files f ON s.file_id = f.id \
@@ -154,7 +154,7 @@ pub fn compute_impact(
             .map(|path| AffectedItem {
                 kind: "file".to_string(),
                 id: fid,
-                name: path.split('/').last().unwrap_or(&path).to_string(),
+                name: path.split('/').next_back().unwrap_or(&path).to_string(),
                 path,
                 depth: 0,
                 is_exported: false,

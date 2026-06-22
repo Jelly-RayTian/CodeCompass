@@ -114,6 +114,7 @@ pub fn clear_workspace_imports(db: &Database, workspace_id: i64) -> Result<(), A
 
 /// Returns all imports for a workspace (used for graph building in future
 /// milestones).
+#[allow(dead_code)]
 pub fn list_imports_for_workspace(
     db: &Database,
     workspace_id: i64,

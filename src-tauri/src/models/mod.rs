@@ -148,4 +148,4 @@ pub struct AnalysisProgressEvent {
 }
 
 /// Re-export graph types from the analysis module.
-pub use crate::analysis::graph::{CycleInfo, DependencyGraph, GraphEdge, GraphNode};
+pub use crate::analysis::graph::DependencyGraph;

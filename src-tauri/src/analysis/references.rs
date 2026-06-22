@@ -18,6 +18,7 @@ pub struct SymbolReference {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum ReferenceType {
     Call,
     NewExpression,

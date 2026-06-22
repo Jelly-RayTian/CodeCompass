@@ -7,6 +7,7 @@ use crate::error::AppError;
 /// A persisted reference row.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct ReferenceEntry {
     pub id: i64,
     pub caller_symbol_id: Option<i64>,
@@ -87,6 +88,7 @@ pub fn clear_workspace_references(db: &Database, workspace_id: i64) -> Result<()
 }
 
 /// Returns references where the given symbol is called.
+#[allow(dead_code)]
 pub fn get_callee_references(
     db: &Database,
     symbol_id: i64,
@@ -105,6 +107,7 @@ pub fn get_callee_references(
 }
 
 /// Returns references where the symbol is the caller.
+#[allow(dead_code)]
 pub fn get_caller_references(
     db: &Database,
     symbol_id: i64,
@@ -122,6 +125,7 @@ pub fn get_caller_references(
     Ok(rows)
 }
 
+#[allow(dead_code)]
 fn map_ref_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ReferenceEntry> {
     Ok(ReferenceEntry {
         id: row.get(0)?,
