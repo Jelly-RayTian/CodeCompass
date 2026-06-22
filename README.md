@@ -1,118 +1,78 @@
 # CodeCompass
 
-A local-first desktop application for understanding unfamiliar codebases.
+**A local-first desktop application for understanding unfamiliar code repositories.**
 
-CodeCompass analyzes repository structure locally, visualizes file and symbol
-relationships, identifies likely entry points, and helps you understand what may
-be affected by code changes — all without sending your code to a server.
+CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, understand, and assess codebases — entirely offline. No cloud uploads, no AI training on your source code.
 
-## Status
+## Features
 
-**Foundation milestone** — project scaffold, database, and minimal UI only.
-Repository scanning, graph visualization, and analysis features are not yet
-implemented.
+| Category                | Highlights                                                                 |
+| ----------------------- | -------------------------------------------------------------------------- |
+| **Repository Scanning** | Recursive filesystem traversal, ignore rules, incremental change detection |
+| **AST Analysis**        | Import extraction, static/dynamic imports, re-exports, CommonJS `require`  |
+| **Symbol Indexing**     | Functions, classes, interfaces, types, enums, React components             |
+| **Dependency Graph**    | Interactive React Flow visualization, cycle detection, node details        |
+| **Symbol Search**       | Name/kind filtering, pagination, clickable results                         |
+| **Code Viewer**         | Monaco Editor with syntax highlighting, search, line numbers               |
+| **Insights**            | Entry-point detection, beginner reading paths, structural findings         |
+| **Impact Analysis**     | Call graph, transitive dependents, change risk scoring                     |
+| **Git Integration**     | Branch/status/commits, co-change hotspots                                  |
+| **i18n**                | Chinese / English language switching                                       |
 
-## Tech Stack
+## Quick Start
 
-| Layer      | Technology                                                        |
-| ---------- | ----------------------------------------------------------------- |
-| Desktop    | Tauri v2                                                          |
-| Frontend   | React 18 + TypeScript (strict) + Vite                             |
-| Backend    | Rust                                                              |
-| Database   | SQLite (rusqlite, bundled)                                        |
-| Migrations | refinery                                                          |
-| Testing    | Vitest + React Testing Library (frontend), `cargo test` (Rust)    |
-| Linting    | ESLint + Prettier (frontend), `cargo fmt` + `cargo clippy` (Rust) |
+### Prerequisites
 
-## Prerequisites
+- [Node.js](https://nodejs.org/) >= 18
+- [Rust](https://rustup.rs/) >= 1.77
+- [Git](https://git-scm.com/) (optional, for Git features)
+- Windows: [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/#windows)
 
-- **Node.js** 18+ and npm
-- **Rust** stable (install via [rustup](https://rustup.rs))
-- **Visual Studio 2022** with the "Desktop development with C++" workload (Windows)
-- **WebView2 Runtime** (pre-installed on Windows 10/11)
-
-## Getting Started
+### Development
 
 ```bash
-# Install frontend dependencies
+git clone https://github.com/Jelly-RayTian/CodeCompass.git
+cd CodeCompass
 npm install
-
-# Run in development mode (starts Vite + Tauri)
 npm run tauri:dev
+```
 
-# Build a production installer
+### Build
+
+```bash
 npm run tauri:build
 ```
 
-## NPM Scripts
+Outputs are at `src-tauri/target/release/bundle/`.
 
-| Script         | Description                       |
-| -------------- | --------------------------------- |
-| `dev`          | Start Vite dev server only        |
-| `build`        | Type-check and build the frontend |
-| `lint`         | Run ESLint                        |
-| `lint:fix`     | Run ESLint and fix issues         |
-| `format`       | Format with Prettier              |
-| `format:check` | Check formatting without writing  |
-| `typecheck`    | Run `tsc` with no emit            |
-| `test`         | Run Vitest tests once             |
-| `tauri:dev`    | Start Tauri in development mode   |
-| `tauri:build`  | Build a production desktop app    |
+## Demo Workflow
 
-## Rust Commands
+1. **Add a folder** — click "Add folder", select your project directory
+2. **Scan** — CodeCompass indexes all `.ts/.tsx/.js/.jsx` files
+3. **Analyze** — extract imports, symbols, and call references
+4. **Explore** — browse the dependency graph, search symbols, view source
+5. **Understand** — check Insights for entry points, reading paths, and risks
 
-| Script              | Description           |
-| ------------------- | --------------------- |
-| `cargo fmt --check` | Check Rust formatting |
-| `cargo clippy`      | Run Rust linter       |
-| `cargo test`        | Run Rust tests        |
-| `cargo check`       | Fast type-check       |
-
-Run these from the `src-tauri/` directory.
-
-## Project Structure
+## Architecture
 
 ```
-CodeCompass/
-├── src/                    # React frontend
-│   ├── app/                # Application shell and navigation
-│   ├── pages/              # Home, Workspaces, Settings
-│   ├── components/         # Reusable UI components
-│   ├── lib/                # tauriClient, useAsyncData hook
-│   ├── types/              # Shared TypeScript types
-│   ├── styles/             # Global CSS
-│   └── test/               # Test setup and test files
-├── src-tauri/              # Rust backend
-│   ├── src/
-│   │   ├── commands/       # Thin Tauri command wrappers
-│   │   ├── db/             # Database connection and migrations
-│   │   ├── migrations/     # SQL migration files
-│   │   ├── models/         # Data models (serde structs)
-│   │   ├── platform/       # OS-specific helpers
-│   │   ├── scanner/        # Repository scanner (stub)
-│   │   ├── analysis/       # Code analysis (stub)
-│   │   ├── tasks/          # Background tasks (stub)
-│   │   ├── error.rs        # Typed error enum
-│   │   ├── lib.rs          # Module wiring and Tauri setup
-│   │   └── main.rs         # Entry point
-│   ├── Cargo.toml
-│   ├── tauri.conf.json
-│   └── build.rs
-├── docs/                   # Project documentation
-├── .github/workflows/      # CI configuration
-└── package.json
+React Frontend (TypeScript, Monaco, React Flow)
+    ↕ Tauri IPC
+Rust Backend (OXC parser, SQLite, walkdir, git)
+    ↕ SQLite
+Local database + source files (never uploaded)
 ```
 
-## Documentation
+## Testing
 
-- [Product Overview](docs/product.md)
-- [Architecture](docs/architecture.md)
-- [Database Schema](docs/database.md)
-- [Privacy](docs/privacy.md)
-- [Roadmap](docs/roadmap.md)
-- [Testing](docs/testing.md)
-- [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md)
+```bash
+npm test                  # Frontend tests
+cd src-tauri && cargo test  # Rust tests (64 tests)
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) for development guidelines.
 
 ## License
 

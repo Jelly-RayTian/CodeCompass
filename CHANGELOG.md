@@ -2,28 +2,90 @@
 
 All notable changes to CodeCompass are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.0.0] — 2026-06-23
 
-## [Unreleased]
+### Foundation
 
-### Added — Foundation Milestone
+- Tauri v2 + React 18 + TypeScript strict + Vite desktop application
+- SQLite via rusqlite with refinery versioned migrations (V1–V7)
+- Typed Rust error handling with `thiserror` and serde serialization
+- Sidebar navigation: Home, Workspaces, Graph, Insights, Viewer, Settings
 
-- Tauri v2 + React 18 + TypeScript (strict) + Vite desktop application scaffold
-- ESLint (flat config), Prettier, Vitest, React Testing Library configuration
-- Application shell with sidebar navigation (Home, Workspaces, Settings pages)
-- Loading, empty, and error states for all pages
-- Typed Tauri client (`tauriClient`) with shared frontend types
-- SQLite database with refinery version-controlled migrations
-- Initial database schema: `workspaces`, `indexed_files`, `analysis_runs`,
-  `app_settings` tables
-- Tauri commands: `get_application_info`, `get_database_status`,
-  `list_workspaces`
-- Typed Rust error enum (`AppError`) with serde serialization
-- Frontend tests: application renders, navigation works
-- Rust tests: initial migration creates all tables, `list_workspaces` returns
-  empty list for a new database
-- Documentation: README, AGENTS, CONTRIBUTING, CHANGELOG, product, architecture,
-  database, privacy, roadmap, testing
-- GitHub Actions CI workflow (frontend lint, typecheck, test, build; cargo fmt,
-  clippy, test, check)
+### Repository Scanning
+
+- Recursive filesystem traversal with `walkdir`
+- Ignore rules: `.git`, `node_modules`, `dist`, `build`, `.next`, `target`, etc.
+- File extension filter: `.ts`, `.tsx`, `.js`, `.jsx`
+- Metadata fingerprint (`size:mtime`) for incremental change detection
+- Scan states: queued/running/completed/failed/cancelled/interrupted
+- Progress events and cancellation support
+- Last-successful-index preservation on failure
+
+### AST Analysis
+
+- OXC-based TypeScript/JavaScript parser for import extraction
+- Static imports, re-exports, dynamic imports, CommonJS `require`
+- Relative path resolution with extension and index-file fallback
+- Symbol extraction: functions, classes, interfaces, types, enums, variables, React components
+- Symbol references: function calls, `new` expressions, property access
+- Call graph with focus mode, depth limits, and cycle detection
+- Parse diagnostics that don't stop repository-wide analysis
+
+### Dependency Graph
+
+- File-level directed graph from persisted imports
+- Node/edge counts, isolated files, cycle detection
+- React Flow visualization with zoom, pan, node selection
+- File details panel: imports, imported-by, diagnostics
+- Filename and directory filters
+
+### Symbol Search
+
+- Symbol search with name/kind filters and pagination
+- File outline for individual files
+- Search results clickable to source viewer
+
+### Code Viewer
+
+- Monaco Editor in read-only mode
+- Syntax highlighting (TS, TSX, JS, JSX)
+- Line numbers, code folding, minimap
+- Navigation from tree, graph, and symbol search
+- Large-file safeguard (>1 MB truncated)
+
+### Insights
+
+- Heuristic entry-point detection with confidence scores
+- BFS-based beginner reading path from entry points
+- Structural findings: unresolved imports, large files, highly-connected modules, orphaned files, potentially unused exports
+- Evidence, limitations, and investigation steps on every finding
+
+### Impact Analysis
+
+- Symbol-level call/reference graph
+- Direct and transitive dependents
+- Change risk scoring based on dependent count, export status, cycle participation
+- "Potentially affected" wording — never presents heuristics as facts
+
+### Git Integration
+
+- Git repository detection without requiring Git for ordinary folders
+- Branch, status, commit count, last commit info
+- File change history and co-change hotspot detection
+- Workspace settings: Git analysis toggle, auto-reanalysis toggle
+- Safe subprocess invocation — no shell interpolation
+
+### Internationalization
+
+- Full Chinese/English UI translation
+- Language switcher in navigation bar
+- Persistent language preference via localStorage
+- Auto-detection from browser language on first launch
+
+### Distribution & Quality
+
+- Windows MSI and NSIS installers via Tauri
+- GitHub Actions CI: frontend (lint, typecheck, test, build) + Rust (fmt, clippy, test, check)
+- 64 Rust unit tests + 5 frontend integration tests
+- Migration chain verified V1→V7
+- AGENTS.md with engineering rules and quality gates

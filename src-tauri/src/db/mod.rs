@@ -57,5 +57,46 @@ mod tests {
             tables.contains(&"app_settings".to_string()),
             "app_settings table missing, got: {tables:?}",
         );
+        // V4: import relationships
+        assert!(
+            tables.contains(&"imports".to_string()),
+            "imports table missing (V4), got: {tables:?}",
+        );
+        assert!(
+            tables.contains(&"analysis_diagnostics".to_string()),
+            "analysis_diagnostics table missing (V4), got: {tables:?}",
+        );
+        // V5: symbols
+        assert!(
+            tables.contains(&"symbols".to_string()),
+            "symbols table missing (V5), got: {tables:?}",
+        );
+        // V6: symbol references
+        assert!(
+            tables.contains(&"symbol_references".to_string()),
+            "symbol_references table missing (V6), got: {tables:?}",
+        );
+        // V7: git file changes
+        assert!(
+            tables.contains(&"git_file_changes".to_string()),
+            "git_file_changes table missing (V7), got: {tables:?}",
+        );
+
+        // Verify V7 columns on workspaces
+        let cols: Vec<String> = conn
+            .prepare("PRAGMA table_info(workspaces)")
+            .expect("pragma")
+            .query_map([], |row| row.get::<_, String>(1))
+            .expect("query")
+            .filter_map(|r| r.ok())
+            .collect();
+        assert!(
+            cols.contains(&"git_analysis_enabled".to_string()),
+            "git_analysis_enabled column missing (V7), got: {cols:?}",
+        );
+        assert!(
+            cols.contains(&"auto_reanalyze_enabled".to_string()),
+            "auto_reanalyze_enabled column missing (V7), got: {cols:?}",
+        );
     }
 }
