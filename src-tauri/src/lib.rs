@@ -53,7 +53,6 @@ pub fn run() {
             commands::analysis::get_file_imports,
             commands::analysis::get_analysis_diagnostics,
             commands::analysis::get_analyzed_files,
-            commands::analysis::get_analyzed_files,
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::graph::get_dependency_graph,

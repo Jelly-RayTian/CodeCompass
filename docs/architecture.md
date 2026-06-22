@@ -51,7 +51,7 @@ directly. All data access goes through `tauriClient`.
 | `models/`   | Serde structs mirroring frontend types                                       |
 | `error.rs`  | `AppError` enum with `thiserror` + `serde::Serialize`                        |
 | `platform/` | Path normalization and platform-aware path comparisons                       |
-| `scanner/`  | Recursive metadata-only directory traversal                                  |
+| `scanner/`  | Recursive metadata-only traversal with `ScanCallbacks` trait for testability |
 | `tasks/`    | `ScanManager` and `AnalysisManager` for cancellation tokens                  |
 | `analysis/` | Code analysis: `LanguageAnalyzer` trait, TS/JS parser (oxc), import resolver |
 

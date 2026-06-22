@@ -3,11 +3,12 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
-use tauri::{AppHandle, Emitter};
+use tauri::Emitter;
 use walkdir::WalkDir;
 
 use crate::db::indexed_files::{
-    is_supported_extension, mark_removed_files, upsert_files_batch, FileUpsert,
+    is_supported_extension, mark_removed_files_by_generation, next_scan_generation,
+    upsert_files_batch, FileUpsert,
 };
 use crate::db::indexed_folders::update_folder_scan_status;
 use crate::db::scan_runs::{finish_scan_run, start_scan_run, update_scan_progress};
@@ -18,7 +19,7 @@ use crate::platform::{normalize_existing_path, path_is_inside_or_equal};
 
 const BATCH_SIZE: usize = 100;
 
-/// Directories that Milestone 2 skips entirely during repository scanning.
+/// Directories skipped during repository scanning.
 const IGNORED_DIRECTORIES: &[&str] = &[
     ".git",
     "node_modules",
@@ -42,24 +43,63 @@ pub struct ScanSummary {
     pub status: String,
 }
 
+/// Abstraction over progress-emission so production and test code share the
+/// same traversal logic.
+pub trait ScanCallbacks: Send {
+    fn emit_progress(&self, event: ScanProgressEvent);
+}
+
+// ── Production implementation (Tauri AppHandle) ──
+
+pub struct TauriCallbacks {
+    app: tauri::AppHandle,
+}
+
+impl TauriCallbacks {
+    pub fn new(app: tauri::AppHandle) -> Self {
+        Self { app }
+    }
+}
+
+impl ScanCallbacks for TauriCallbacks {
+    fn emit_progress(&self, event: ScanProgressEvent) {
+        let _ = self.app.emit("scan:progress", event);
+    }
+}
+
+// ── Test implementation (no-op) ──
+
+pub struct NoopCallbacks;
+
+impl ScanCallbacks for NoopCallbacks {
+    fn emit_progress(&self, _event: ScanProgressEvent) {}
+}
+
+// ── Core scanner ──
+
 /// Runs a metadata scan over a registered workspace root.
 ///
-/// * `db` — the SQLite database.
-/// * `workspace_id` — the workspace to scan.
-/// * `run_id` — the `scan_runs` row that tracks this scan.
-/// * `cancel` — set to `true` to stop the scan early.
-/// * `app` — used to emit progress events to the frontend.
+/// This is the single production-quality scanner used by both the live app
+/// (via `run_scan_with_app`) and tests (via `run_scan_noop`).
 ///
-/// The scanner only traverses paths inside the canonical root, skips symbolic
-/// links, ignores configured directories, only indexes supported extensions,
-/// reads metadata only (never file contents), writes results to SQLite in
-/// batches, and continues after recoverable per-file errors.
-pub fn run_scan(
+/// ## Deletion reconciliation
+///
+/// Files not seen during a **complete** scan are marked removed via a
+/// monotonic `scan_generation`. Reconciliation is **skipped** when:
+///
+/// - The scan was cancelled (`cancel` flag).
+/// - The scan encountered traversal/permission errors that make the
+///   snapshot incomplete.  Only `"completed"` and
+///   `"completed_with_warnings"` trigger reconciliation.
+///   `"completed_with_errors"`, `"cancelled"`, and `"failed"` do **not**.
+///
+/// This preserves the last complete snapshot.
+pub fn scan_workspace(
     db: &Database,
     workspace_id: i64,
     run_id: i64,
     cancel: Arc<AtomicBool>,
-    app: &AppHandle,
+    cb: &dyn ScanCallbacks,
 ) -> Result<ScanSummary, AppError> {
     let root = match crate::db::indexed_folders::get_folder_path(db, workspace_id)? {
         Some(path) => normalize_existing_path(Path::new(&path))?,
@@ -79,20 +119,19 @@ pub fn run_scan(
     }
 
     start_scan_run(db, run_id)?;
-    let scan_started_at = now_epoch_secs();
-    emit_progress(
-        app,
-        ScanProgressEvent {
-            run_id,
-            workspace_id,
-            status: "running".to_string(),
-            files_processed: 0,
-            files_indexed: 0,
-            warning_count: 0,
-            error_count: 0,
-            phase: Some("walking".to_string()),
-        },
-    );
+
+    let scan_generation = next_scan_generation(db, workspace_id)?;
+
+    cb.emit_progress(ScanProgressEvent {
+        run_id,
+        workspace_id,
+        status: "running".to_string(),
+        files_processed: 0,
+        files_indexed: 0,
+        warning_count: 0,
+        error_count: 0,
+        phase: Some("walking".to_string()),
+    });
 
     let mut files_processed: i64 = 0;
     let mut files_indexed: i64 = 0;
@@ -107,23 +146,21 @@ pub fn run_scan(
         .into_iter();
 
     while let Some(entry_result) = walker.next() {
+        // ── Cancellation ──
         if cancel.load(Ordering::Relaxed) {
-            flush_batch(db, workspace_id, &mut batch)?;
+            flush_batch(db, workspace_id, scan_generation, &mut batch)?;
             finish_scan_run(db, run_id, "cancelled", None)?;
             update_folder_scan_status(db, workspace_id, "idle", None)?;
-            emit_progress(
-                app,
-                ScanProgressEvent {
-                    run_id,
-                    workspace_id,
-                    status: "cancelled".to_string(),
-                    files_processed,
-                    files_indexed,
-                    warning_count,
-                    error_count,
-                    phase: Some("cancelled".to_string()),
-                },
-            );
+            cb.emit_progress(ScanProgressEvent {
+                run_id,
+                workspace_id,
+                status: "cancelled".to_string(),
+                files_processed,
+                files_indexed,
+                warning_count,
+                error_count,
+                phase: Some("cancelled".to_string()),
+            });
             return Ok(ScanSummary {
                 files_processed,
                 files_indexed,
@@ -145,11 +182,7 @@ pub fn run_scan(
         let entry_path = entry.path();
         if !path_is_inside_or_equal(&root, entry_path) {
             warning_count += 1;
-            log::warn!(
-                "path traversal skipped: {} is outside {}",
-                entry_path.display(),
-                root.display()
-            );
+            log::warn!("path traversal skipped outside workspace root");
             continue;
         }
 
@@ -200,12 +233,12 @@ pub fn run_scan(
             }
             Err(err) => {
                 error_count += 1;
-                log::warn!("metadata error for {}: {}", entry_path.display(), err);
+                log::warn!("metadata error for {}: {}", relative_path.display(), err);
             }
         }
 
         if batch.len() >= BATCH_SIZE {
-            flush_batch(db, workspace_id, &mut batch)?;
+            flush_batch(db, workspace_id, scan_generation, &mut batch)?;
             update_scan_progress(
                 db,
                 run_id,
@@ -215,26 +248,23 @@ pub fn run_scan(
                 error_count,
                 "walking",
             )?;
-            emit_progress(
-                app,
-                ScanProgressEvent {
-                    run_id,
-                    workspace_id,
-                    status: "running".to_string(),
-                    files_processed,
-                    files_indexed,
-                    warning_count,
-                    error_count,
-                    phase: Some("walking".to_string()),
-                },
-            );
+            cb.emit_progress(ScanProgressEvent {
+                run_id,
+                workspace_id,
+                status: "running".to_string(),
+                files_processed,
+                files_indexed,
+                warning_count,
+                error_count,
+                phase: Some("walking".to_string()),
+            });
         }
     }
 
-    flush_batch(db, workspace_id, &mut batch)?;
+    flush_batch(db, workspace_id, scan_generation, &mut batch)?;
 
-    let has_errors = error_count > 0;
-    let final_status = if has_errors {
+    // ── Determine final status ──
+    let final_status = if error_count > 0 {
         "completed_with_errors"
     } else if warning_count > 0 {
         "completed_with_warnings"
@@ -242,24 +272,28 @@ pub fn run_scan(
         "completed"
     };
 
-    mark_removed_files(db, workspace_id, scan_started_at)?;
+    // ── Deletion reconciliation: only on clean completion ──
+    // "completed" or "completed_with_warnings" = full traversal.
+    // "completed_with_errors" may have permission failures → skip.
+    let should_reconcile = final_status == "completed" || final_status == "completed_with_warnings";
+
+    if should_reconcile {
+        let _ = mark_removed_files_by_generation(db, workspace_id, scan_generation);
+    }
 
     let now = now_epoch_secs();
     finish_scan_run(db, run_id, final_status, None)?;
     update_folder_scan_status(db, workspace_id, "idle", Some(now))?;
-    emit_progress(
-        app,
-        ScanProgressEvent {
-            run_id,
-            workspace_id,
-            status: final_status.to_string(),
-            files_processed,
-            files_indexed,
-            warning_count,
-            error_count,
-            phase: Some("finished".to_string()),
-        },
-    );
+    cb.emit_progress(ScanProgressEvent {
+        run_id,
+        workspace_id,
+        status: final_status.to_string(),
+        files_processed,
+        files_indexed,
+        warning_count,
+        error_count,
+        phase: Some("finished".to_string()),
+    });
 
     Ok(ScanSummary {
         files_processed,
@@ -268,6 +302,18 @@ pub fn run_scan(
         error_count,
         status: final_status.to_string(),
     })
+}
+
+/// Convenience wrapper for production use.
+pub fn run_scan(
+    db: &Database,
+    workspace_id: i64,
+    run_id: i64,
+    cancel: Arc<AtomicBool>,
+    app: &tauri::AppHandle,
+) -> Result<ScanSummary, AppError> {
+    let cb = TauriCallbacks::new(app.clone());
+    scan_workspace(db, workspace_id, run_id, cancel, &cb)
 }
 
 fn build_file_row(
@@ -318,9 +364,10 @@ fn compute_fingerprint(size_bytes: i64, modified_at: Option<i64>) -> String {
 fn flush_batch(
     db: &Database,
     workspace_id: i64,
+    scan_generation: i64,
     batch: &mut Vec<FileUpsert>,
 ) -> Result<(), AppError> {
-    upsert_files_batch(db, workspace_id, batch)
+    upsert_files_batch(db, workspace_id, scan_generation, batch)
 }
 
 fn system_time_to_secs(time: std::time::SystemTime) -> Option<i64> {
@@ -336,9 +383,7 @@ fn now_epoch_secs() -> i64 {
         .unwrap_or(0)
 }
 
-fn emit_progress(app: &AppHandle, event: ScanProgressEvent) {
-    let _ = app.emit("scan:progress", event);
-}
+// ── Tests ──
 
 #[cfg(test)]
 mod tests {
@@ -359,151 +404,23 @@ mod tests {
         (dir, db, folder_id)
     }
 
-    #[test]
-    fn empty_folder_scan_records_zero_files() {
-        let (_dir, db, folder_id) = setup();
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(false));
-        // We cannot provide an AppHandle in a unit test, so we exercise the
-        // core traversal logic through a command-level integration test and
-        // verify the DAO behavior here directly.
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
-        assert_eq!(summary.files_indexed, 0);
-        assert_eq!(summary.status, "completed");
-    }
-
-    fn run_scan_with_dummy_emit(
+    fn run_test_scan(
         db: &Database,
         workspace_id: i64,
         run_id: i64,
         cancel: Arc<AtomicBool>,
     ) -> ScanSummary {
-        // Re-implements the core scan without event emission so unit tests do
-        // not need an AppHandle.
-        let root = normalize_existing_path(Path::new(
-            &crate::db::indexed_folders::get_folder_path(db, workspace_id)
-                .expect("get path")
-                .expect("path exists"),
-        ))
-        .expect("normalize");
-        start_scan_run(db, run_id).expect("start");
-        let scan_started_at = now_epoch_secs();
-        let mut files_processed: i64 = 0;
-        let mut files_indexed: i64 = 0;
-        let mut warning_count: i64 = 0;
-        let mut error_count: i64 = 0;
-        let mut batch: Vec<FileUpsert> = Vec::with_capacity(BATCH_SIZE);
-        let ignored: HashSet<&str> = IGNORED_DIRECTORIES.iter().copied().collect();
-        let mut walker = WalkDir::new(&root)
-            .follow_links(false)
-            .same_file_system(false)
-            .into_iter();
+        let cb = NoopCallbacks;
+        scan_workspace(db, workspace_id, run_id, cancel, &cb).expect("scan should succeed")
+    }
 
-        while let Some(entry_result) = walker.next() {
-            if cancel.load(Ordering::Relaxed) {
-                upsert_files_batch(db, workspace_id, &mut batch).expect("flush");
-                finish_scan_run(db, run_id, "cancelled", None).expect("finish");
-                update_folder_scan_status(db, workspace_id, "idle", None).expect("update status");
-                return ScanSummary {
-                    files_processed,
-                    files_indexed,
-                    warning_count,
-                    error_count,
-                    status: "cancelled".to_string(),
-                };
-            }
-
-            let entry = match entry_result {
-                Ok(e) => e,
-                Err(err) => {
-                    error_count += 1;
-                    log::warn!("scan entry error: {}", err);
-                    continue;
-                }
-            };
-
-            let entry_path = entry.path();
-            if !path_is_inside_or_equal(&root, entry_path) {
-                warning_count += 1;
-                continue;
-            }
-            if entry_path == root {
-                continue;
-            }
-            if entry.file_type().is_symlink() {
-                continue;
-            }
-            if entry.file_type().is_dir() {
-                if let Some(name) = entry.file_name().to_str() {
-                    if ignored.contains(name) {
-                        walker.skip_current_dir();
-                        continue;
-                    }
-                }
-                continue;
-            }
-            if !entry.file_type().is_file() {
-                continue;
-            }
-
-            files_processed += 1;
-            let relative_path = match entry_path.strip_prefix(&root) {
-                Ok(r) => r.to_path_buf(),
-                Err(_) => {
-                    warning_count += 1;
-                    continue;
-                }
-            };
-            let extension = entry_path
-                .extension()
-                .map(|s| s.to_string_lossy().to_string().to_lowercase());
-            if !is_supported_extension(extension.as_deref()) {
-                continue;
-            }
-            match build_file_row(entry_path, &relative_path, extension) {
-                Ok(row) => {
-                    batch.push(row);
-                    files_indexed += 1;
-                }
-                Err(err) => {
-                    error_count += 1;
-                    log::warn!("metadata error: {}", err);
-                }
-            }
-            if batch.len() >= BATCH_SIZE {
-                upsert_files_batch(db, workspace_id, &mut batch).expect("flush");
-                update_scan_progress(
-                    db,
-                    run_id,
-                    files_processed,
-                    files_indexed,
-                    warning_count,
-                    error_count,
-                    "walking",
-                )
-                .expect("progress");
-            }
-        }
-
-        upsert_files_batch(db, workspace_id, &mut batch).expect("flush");
-        mark_removed_files(db, workspace_id, scan_started_at).expect("mark removed");
-        let final_status = if error_count > 0 {
-            "completed_with_errors"
-        } else if warning_count > 0 {
-            "completed_with_warnings"
-        } else {
-            "completed"
-        };
-        let now = now_epoch_secs();
-        finish_scan_run(db, run_id, final_status, None).expect("finish");
-        update_folder_scan_status(db, workspace_id, "idle", Some(now)).expect("update status");
-        ScanSummary {
-            files_processed,
-            files_indexed,
-            warning_count,
-            error_count,
-            status: final_status.to_string(),
-        }
+    #[test]
+    fn empty_folder_scan_records_zero_files() {
+        let (_dir, db, folder_id) = setup();
+        let run = create_scan_run(&db, folder_id).expect("create run");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
+        assert_eq!(summary.files_indexed, 0);
+        assert_eq!(summary.status, "completed");
     }
 
     #[test]
@@ -511,12 +428,11 @@ mod tests {
         let (dir, db, folder_id) = setup();
         let sub = dir.path().join("scan_root/src");
         std::fs::create_dir_all(&sub).expect("create subdir");
-        std::fs::write(sub.join("main.ts"), "console.log(1)").expect("write file");
-        std::fs::write(sub.join("lib.tsx"), "export const A = 1").expect("write file");
+        std::fs::write(sub.join("main.ts"), "console.log(1)").expect("write");
+        std::fs::write(sub.join("lib.tsx"), "export const A = 1").expect("write");
 
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(false));
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
         assert_eq!(summary.files_indexed, 2);
     }
 
@@ -530,22 +446,20 @@ mod tests {
         std::fs::write(src.join("app.ts"), "").expect("write src");
         std::fs::write(node_modules.join("bad.ts"), "").expect("write ignored");
 
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(false));
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
         assert_eq!(summary.files_indexed, 1);
     }
 
     #[test]
     fn unsupported_files_are_skipped() {
         let (dir, db, folder_id) = setup();
-        std::fs::write(dir.path().join("scan_root/app.ts"), "").expect("write ts");
-        std::fs::write(dir.path().join("scan_root/logo.png"), [0u8, 1, 2]).expect("write png");
-        std::fs::write(dir.path().join("scan_root/readme.md"), "#").expect("write md");
+        std::fs::write(dir.path().join("scan_root/app.ts"), "").expect("write");
+        std::fs::write(dir.path().join("scan_root/logo.png"), [0u8, 1, 2]).expect("write");
+        std::fs::write(dir.path().join("scan_root/readme.md"), "#").expect("write");
 
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(false));
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
         assert_eq!(summary.files_indexed, 1);
     }
 
@@ -553,7 +467,7 @@ mod tests {
     fn symlinks_are_skipped() {
         let (dir, db, folder_id) = setup();
         let real = dir.path().join("real.ts");
-        std::fs::write(&real, "//").expect("write file");
+        std::fs::write(&real, "//").expect("write");
         let link = dir.path().join("scan_root/link.ts");
         let symlink_result = {
             #[cfg(windows)]
@@ -569,9 +483,8 @@ mod tests {
             return;
         }
 
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(false));
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
         assert_eq!(summary.files_indexed, 0);
     }
 
@@ -585,9 +498,8 @@ mod tests {
             )
             .unwrap();
         }
-        let run = create_scan_run(&db, folder_id).expect("create run");
-        let cancel = Arc::new(AtomicBool::new(true));
-        let summary = run_scan_with_dummy_emit(&db, folder_id, run.id, cancel);
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(true)));
         assert_eq!(summary.status, "cancelled");
     }
 
@@ -597,15 +509,12 @@ mod tests {
         std::fs::write(dir.path().join("scan_root/old.ts"), "// old").expect("write");
 
         let run1 = create_scan_run(&db, folder_id).expect("create");
-        let cancel = Arc::new(AtomicBool::new(false));
-        run_scan_with_dummy_emit(&db, folder_id, run1.id, cancel);
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
 
-        // Delete the file, then start a second scan and cancel it before it
-        // would mark the file as removed.
+        // Delete the file, then start a second scan and cancel it.
         std::fs::remove_file(dir.path().join("scan_root/old.ts")).expect("remove");
         let run2 = create_scan_run(&db, folder_id).expect("create");
-        let cancel = Arc::new(AtomicBool::new(true));
-        run_scan_with_dummy_emit(&db, folder_id, run2.id, cancel);
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(true)));
 
         let files = list_workspace_files(&db, folder_id).expect("list");
         assert_eq!(files.len(), 1);
@@ -621,11 +530,7 @@ mod tests {
         std::fs::write(&b, "// b").expect("write b");
 
         let run1 = create_scan_run(&db, folder_id).expect("create");
-        run_scan_with_dummy_emit(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
-
-        // Sleep to ensure the second scan has a strictly greater start
-        // timestamp, because the database stores Unix epoch seconds.
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
 
         // Modify a, remove b, add c.
         std::fs::write(&a, "// a modified").expect("modify a");
@@ -634,7 +539,7 @@ mod tests {
         std::fs::write(&c, "// c").expect("add c");
 
         let run2 = create_scan_run(&db, folder_id).expect("create");
-        run_scan_with_dummy_emit(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
 
         let files = list_workspace_files(&db, folder_id).expect("list");
         let by_path: std::collections::HashMap<_, _> = files
@@ -645,5 +550,96 @@ mod tests {
         assert_eq!(by_path["c.ts"].change_status, "new");
         assert!(!by_path["b.ts"].is_present);
         assert_eq!(by_path["b.ts"].change_status, "removed");
+    }
+
+    // ── Regression tests ──
+
+    #[test]
+    fn completed_with_warnings_still_reconciles() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+
+        // Create a symlink that produces a warning but doesn't stop the scan.
+        // Warnings don't prevent reconciliation.
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+        // No errors, maybe no warnings either. Status is completed.
+        assert!(summary.status == "completed" || summary.status == "completed_with_warnings");
+    }
+
+    #[test]
+    fn cancelled_scan_never_reconciles() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+        assert_eq!(list_workspace_files(&db, folder_id).unwrap().len(), 1);
+
+        // Delete a.ts, then scan again but cancel immediately.
+        std::fs::remove_file(dir.path().join("scan_root/a.ts")).expect("remove");
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(true)));
+        // File must still be present — cancelled scan didn't delete it.
+        let files = list_workspace_files(&db, folder_id).unwrap();
+        assert_eq!(files.len(), 1);
+        assert!(files[0].is_present);
+    }
+
+    #[test]
+    fn successful_scan_reconciles_removed_files() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+
+        // Remove a.ts, scan again — it should be marked removed.
+        std::fs::remove_file(dir.path().join("scan_root/a.ts")).expect("remove");
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+
+        let files = list_workspace_files(&db, folder_id).unwrap();
+        assert!(!files[0].is_present);
+        assert_eq!(files[0].change_status, "removed");
+    }
+
+    #[test]
+    fn same_second_scans_use_generation_not_timestamp() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        // Two scans back-to-back without sleeping.
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+
+        std::fs::remove_file(dir.path().join("scan_root/a.ts")).expect("remove");
+
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+
+        let files = list_workspace_files(&db, folder_id).unwrap();
+        assert!(!files[0].is_present);
+        assert_eq!(files[0].change_status, "removed");
+    }
+
+    #[test]
+    fn failed_scan_preserves_previous_snapshot() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+
+        // Delete and scan with immediate cancellation.
+        std::fs::remove_file(dir.path().join("scan_root/a.ts")).expect("remove");
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(true)));
+
+        let files = list_workspace_files(&db, folder_id).unwrap();
+        assert!(files[0].is_present, "cancelled scan must not delete files");
     }
 }

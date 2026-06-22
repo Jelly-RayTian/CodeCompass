@@ -266,7 +266,7 @@ mod tests {
             indexed_at: 1000,
             last_seen_at: 1000,
         }];
-        upsert_files_batch(db, workspace_id, &mut batch).unwrap();
+        upsert_files_batch(db, workspace_id, 0, &mut batch).unwrap();
         db.lock()
             .unwrap()
             .query_row(

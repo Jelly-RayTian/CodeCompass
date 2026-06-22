@@ -175,7 +175,7 @@ mod tests {
             indexed_at: 1000,
             last_seen_at: 1000,
         }];
-        upsert_files_batch(&db, fid, &mut batch).expect("upsert");
+        upsert_files_batch(&db, fid, 0, &mut batch).expect("upsert");
         let file_id = db
             .lock()
             .unwrap()
