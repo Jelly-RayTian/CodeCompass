@@ -95,6 +95,13 @@ export interface CommandResult<T> {
 
 export type { CycleInfo, DependencyGraph, GraphEdge, GraphNode } from './graph';
 export type {
+  AffectedItem,
+  CallGraph,
+  CallGraphEdge,
+  CallGraphNode,
+  ChangeRisk,
+} from './impact';
+export type {
   EntryPoint,
   ReadingPathItem,
   StructuralFinding,

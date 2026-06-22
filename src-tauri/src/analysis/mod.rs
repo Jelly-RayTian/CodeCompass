@@ -1,7 +1,10 @@
+pub mod call_graph;
 pub mod entrypoint;
 pub mod findings;
 pub mod graph;
+pub mod impact;
 pub mod reading_path;
+pub mod references;
 pub mod resolver;
 pub mod runner;
 pub mod symbols;

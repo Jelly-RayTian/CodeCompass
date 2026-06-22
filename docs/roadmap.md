@@ -99,16 +99,17 @@
 - Symbol Search UI component with filter dropdowns and pagination
 - Rust tests for all symbol kinds, source locations, malformed input
 
-## Milestone 6 — Impact Analysis
+## Milestone 6 — Read-only Code Viewer & Navigation
 
-## Milestone 6 — Impact Analysis
+**Status:** Complete
 
-**Status:** Not started
-
-- "What is affected?" query for a selected file or symbol
-- Change impact highlighting on the graph
-- Coupling and cohesion metrics
-- Hotspot detection (high-churn, high-coupling files)
+- Monaco Editor integration with syntax highlighting, line numbers, search, folding
+- Read-only mode — no source editing or execution
+- Navigation from file tree, dependency graph, and symbol search to source viewer
+- File metadata and import/reference side panels
+- Large-file safeguard (>1 MB truncated with warning)
+- Path containment validation on every read
+- Imports and "referenced by" lists in the viewer side panel
 
 ## Milestone 7 — Entry Points, Reading Paths & Structural Findings
 
@@ -121,6 +122,19 @@
 - Every finding includes evidence, limitations, and investigation steps
 - Insights page with entry point list, numbered reading path, and categorized findings
 - No fake quality scores or AI-generated text
+
+## Milestone 8 — Call Graph & Impact Analysis
+
+**Status:** Complete
+
+- AST-based symbol reference extraction (calls, `new` expressions, property access)
+- V6 migration: `symbol_references` table with caller/callee resolution
+- Call graph with focus mode and depth limits, cycle detection
+- Change impact analysis: direct + transitive dependents, affected files/symbols
+- Risk formula based on dependent count, export status, and cycle participation
+- Cautious wording: "potentially affected based on statically detected references"
+- Evidence, limitations, and static-analysis caveats on every finding
+- Frontend API for call graph + impact queries
 
 **Status:** Not started
 

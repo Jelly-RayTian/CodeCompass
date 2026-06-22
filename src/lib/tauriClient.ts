@@ -4,6 +4,8 @@ import type {
   AddFolderResult,
   AnalysisDiagnostic,
   ApplicationInfo,
+  CallGraph,
+  ChangeRisk,
   DatabaseStatus,
   DependencyGraph,
   FileEntry,
@@ -141,6 +143,28 @@ export const tauriClient = {
   getWorkspaceInsights(workspaceId: number): Promise<WorkspaceInsights> {
     return call<WorkspaceInsights>('get_workspace_insights', {
       workspaceId,
+    });
+  },
+
+  getCallGraph(
+    workspaceId: number,
+    focusSymbolId?: number,
+    maxDepth?: number,
+  ): Promise<CallGraph> {
+    return call<CallGraph>('get_call_graph', {
+      workspaceId,
+      focusSymbolId: focusSymbolId ?? null,
+      maxDepth: maxDepth ?? null,
+    });
+  },
+
+  getChangeImpact(
+    workspaceId: number,
+    symbolId: number,
+  ): Promise<ChangeRisk> {
+    return call<ChangeRisk>('get_change_impact', {
+      workspaceId,
+      symbolId,
     });
   },
 } as const;

@@ -56,6 +56,8 @@ pub fn run() {
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::graph::get_dependency_graph,
+            commands::impact::get_call_graph,
+            commands::impact::get_change_impact,
             commands::insights::get_workspace_insights,
             commands::source::read_source_file,
             commands::symbols::search_symbols_command,
