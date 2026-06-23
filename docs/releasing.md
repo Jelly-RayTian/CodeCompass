@@ -51,7 +51,9 @@ Run the installer. CodeCompass installs to `%LOCALAPPDATA%\CodeCompass`.
 ## Known Limitations (Windows)
 
 - **SmartScreen warning**: Installers are unsigned. Click "More info" → "Run anyway".
-- **Installer identifier**: The bundle identifier `com.codecompass.app` ends with `.app`, which triggers a macOS-specific Tauri warning (harmless on Windows).
+- **Installer identifier**: The identifier has been changed to `io.github.jellyraytian.codecompass`. This means v0.1.0-alpha installs are **not compatible** with future releases using a different identifier — uninstall the old version first.
+
+- **Identifier change**: Changed from `com.codecompass.app` to `io.github.jellyraytian.codecompass` before the first public release. This follows the reverse-domain convention with the GitHub account name.
 - **Icons**: Uses Tauri's default placeholder icons. Replace with branded icons before a stable release.
 - **No auto-update**: Users must manually download new versions.
 

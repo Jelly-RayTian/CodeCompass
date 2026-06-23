@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="#1e1e2e" stroke="#3178c6" stroke-width="8"/>
+
+  <!-- Compass outer ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#94a3b8" stroke-width="4" stroke-dasharray="8 4"/>
+
+  <!-- Compass needle (north) -->
+  <polygon points="256,60 240,180 256,200 272,180" fill="#ef5b5b"/>
+
+  <!-- Compass needle (south) -->
+  <polygon points="256,452 240,332 256,312 272,332" fill="#94a3b8"/>
+
+  <!-- Code bracket left -->
+  <path d="M 140 220 L 100 256 L 140 292" fill="none" stroke="#5ba0f5" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Code bracket right -->
+  <path d="M 372 220 L 412 256 L 372 292" fill="none" stroke="#5ba0f5" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Center dot -->
+  <circle cx="256" cy="256" r="12" fill="#5ba0f5"/>
+
+  <!-- Import arrows (graph relationships) -->
+  <path d="M 180 340 Q 220 310 256 320" fill="none" stroke="#3178c6" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <path d="M 332 340 Q 292 310 256 320" fill="none" stroke="#3178c6" stroke-width="3" marker-end="url(#arrow-blue)"/>
+
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M 0 0 L 6 3 L 0 6 Z" fill="#3178c6"/>
+    </marker>
+  </defs>
+</svg>
