@@ -1,12 +1,12 @@
-mod analysis;
-mod commands;
-mod db;
-mod error;
-mod git;
-mod models;
-mod platform;
-mod scanner;
-mod tasks;
+pub mod analysis;
+pub mod commands;
+pub mod db;
+pub mod error;
+pub mod git;
+pub mod models;
+pub mod platform;
+pub mod scanner;
+pub mod tasks;
 
 use tauri::Manager;
 

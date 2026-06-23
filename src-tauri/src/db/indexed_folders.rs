@@ -287,4 +287,34 @@ mod tests {
         assert_eq!(listed.len(), 1);
         assert_eq!(listed[0].availability, "missing");
     }
+
+    #[test]
+    fn workspace_lifecycle_persist_reopen_remove() {
+        let dir = tempdir().expect("create temp dir");
+        let db_path = dir.path().join("test.db");
+        let folder_dir = dir.path().join("lifecycle_test");
+        let test_file = folder_dir.join("test.txt");
+        std::fs::create_dir(&folder_dir).expect("create folder");
+        std::fs::write(&test_file, "data").expect("write file");
+
+        let workspace_id = {
+            let db = Database::open(&db_path).expect("open");
+            let folder = insert_indexed_folder(&db, &folder_dir).expect("insert");
+            folder.id
+        };
+
+        // Reopen and verify workspace persists.
+        let db2 = Database::open(&db_path).expect("reopen");
+        let listed = list_indexed_folders(&db2).expect("list");
+        assert_eq!(listed.len(), 1);
+        assert_eq!(listed[0].id, workspace_id);
+
+        // Remove workspace record.
+        remove_indexed_folder(&db2, workspace_id).expect("remove");
+        assert!(list_indexed_folders(&db2).unwrap().is_empty());
+
+        // Original files untouched.
+        assert!(folder_dir.exists());
+        assert!(test_file.exists());
+    }
 }

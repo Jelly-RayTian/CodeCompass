@@ -10,6 +10,7 @@ const INDEX_FILES: &[&str] = &["index.ts", "index.tsx", "index.js", "index.jsx"]
 /// Returns `Ok(Some(path))` on success, `Ok(None)` when the import is an
 /// external package, and `Err(())` when resolution fails due to path
 /// traversal or missing files.
+#[allow(clippy::result_unit_err)]
 pub fn resolve_import(
     workspace_root: &Path,
     source_dir: &Path,

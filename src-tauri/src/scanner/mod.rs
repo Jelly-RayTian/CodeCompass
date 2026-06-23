@@ -732,4 +732,42 @@ mod tests {
         let files = list_workspace_files(&db, folder_id).unwrap();
         assert!(!files[0].is_present);
     }
+
+    #[test]
+    fn unchanged_rescan_preserves_index() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+        let files1 = list_workspace_files(&db, folder_id).unwrap();
+        assert_eq!(files1[0].change_status, "new");
+
+        // Rescan without changes.
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+        let files2 = list_workspace_files(&db, folder_id).unwrap();
+        assert_eq!(files2[0].change_status, "unchanged");
+    }
+
+    #[test]
+    fn new_file_detected_on_rescan() {
+        let (dir, db, folder_id) = setup();
+        std::fs::write(dir.path().join("scan_root/a.ts"), "").expect("write");
+
+        let run1 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run1.id, Arc::new(AtomicBool::new(false)));
+
+        std::fs::write(dir.path().join("scan_root/new_file.ts"), "").expect("write");
+        let run2 = create_scan_run(&db, folder_id).expect("create");
+        run_test_scan(&db, folder_id, run2.id, Arc::new(AtomicBool::new(false)));
+
+        let files = list_workspace_files(&db, folder_id).unwrap();
+        assert_eq!(files.len(), 2);
+        let new_f = files
+            .iter()
+            .find(|f| f.relative_path == "new_file.ts")
+            .unwrap();
+        assert_eq!(new_f.change_status, "new");
+    }
 }

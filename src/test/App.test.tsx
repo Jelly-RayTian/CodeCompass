@@ -56,4 +56,37 @@ describe('App', () => {
     await user.click(screen.getByRole('link', { name: /settings/i }));
     expect(await screen.findByText('Database Status')).toBeInTheDocument();
   });
+
+  it('navigates to the Insights page and shows folder selector', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('link', { name: /insights/i }));
+    expect(
+      await screen.findByRole('heading', { name: 'Insights' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Select a folder/)).toBeInTheDocument();
+  });
+
+  it('shows error state when workspace list fails', async () => {
+    mockTauriCommand('list_indexed_folders_command', async () => {
+      throw new Error('database locked');
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('link', { name: /workspaces/i }));
+    expect(
+      await screen.findByText('Failed to load indexed folders'),
+    ).toBeInTheDocument();
+  });
+
+  it('retry button appears on error state', async () => {
+    mockTauriCommand('list_indexed_folders_command', async () => {
+      throw new Error('transient');
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('link', { name: /workspaces/i }));
+    const retry = await screen.findByRole('button', { name: /retry/i });
+    expect(retry).toBeInTheDocument();
+  });
 });
