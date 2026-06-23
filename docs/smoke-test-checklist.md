@@ -7,11 +7,14 @@ Run these steps before tagging a release.
 - [ ] Delete `%LOCALAPPDATA%\io.github.jellyraytian.codecompass\`
 - [ ] Run NSIS installer: `CodeCompass_x.x.x_x64-setup.exe`
 - [ ] App installs without error
+- [ ] **Installer icon** shows the CodeCompass compass badge (not a Tauri placeholder)
 - [ ] Desktop shortcut created (if NSIS option selected)
+- [ ] **Start Menu icon** shows the compass badge
 
 ## First Launch
 
 - [ ] App starts without crash
+- [ ] **Window/taskbar icon** shows the compass badge
 - [ ] Home page shows "CodeCompass" + version
 - [ ] Database status shows "Connected"
 - [ ] No error banners on first load
@@ -90,6 +93,14 @@ Run these steps before tagging a release.
 - [ ] Click "EN" → switches back to English
 - [ ] Close and reopen → language preference persists
 
+## Large-Repository Safety
+
+- [ ] Register a workspace with >500 files that have internal imports
+- [ ] Open the Dependency Graph
+- [ ] Graph renders with a truncation warning banner (not a silent error)
+- [ ] Path/directory filters narrow the visible nodes
+- [ ] Opening a >1 MB file shows the truncation warning, not a freeze
+
 ## Uninstall
 
 - [ ] Settings → Apps → CodeCompass → Uninstall
@@ -100,4 +111,5 @@ Run these steps before tagging a release.
 
 - [ ] Disconnect from internet
 - [ ] App launches and all features work
-- [ ] No telemetry, no network requests visible
+- [ ] Open the Code Viewer (Monaco loads without network)
+- [ ] No telemetry, no network requests visible (verify with a local proxy or firewall log)

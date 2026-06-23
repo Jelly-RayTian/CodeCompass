@@ -18,12 +18,15 @@
     "test:ui": "vitest --ui",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "check:versions": "node scripts/check-versions.mjs",
+    "bench:summary": "cd src-tauri && cargo run --release --example bench_summary"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@tauri-apps/api": "^2.1.1",
     "@xyflow/react": "^12.11.0",
+    "monaco-editor": "^0.55.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0"

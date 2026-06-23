@@ -34,8 +34,9 @@ files is persisted.
 
 CodeCompass does **not** access:
 
-- Network resources (no telemetry, no analytics, no update checks in the
-  current version)
+- Network resources (no telemetry, no analytics, no update checks, no
+  CDN loading — the Monaco Editor runtime is bundled locally; see
+  [docs/privacy-audit.md](privacy-audit.md) for the evidence)
 - System registries beyond what Tauri/WebView2 require
 - Other applications' data
 

@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v*']
 
+# Release needs to create a GitHub Release and upload artifacts.
+# `contents: write` is the minimal scope required for that.
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -30,8 +35,11 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Install Node deps
+      - name: Install Node deps (npm ci)
         run: npm ci
+
+      - name: Validate version alignment with tag
+        run: node scripts/check-versions.mjs --tag=${{ github.ref_name }}
 
       - name: Frontend lint
         run: npm run lint
@@ -102,11 +110,20 @@ jobs:
 
             ### Install
 
-            Download and run the `.exe` (NSIS) or `.msi` (MSI) installer below.
+            Download and run the `.exe` (NSIS, **required**) or `.msi` (MSI, optional) installer below.
 
-            ### Notes
+            > **Unsigned installers.** These builds are not code-signed, so
+            > Windows SmartScreen may show a warning. Click **More info →
+            > Run anyway** to proceed. Your source files are never modified
+            > by CodeCompass.
 
-            - This is a **prerelease** — may contain rough edges.
-            - Installers are **unsigned**. Windows may show a SmartScreen warning.
-            - Requires Windows 10 or later.
+            ### Requirements
+
+            - Windows 10 or later
+            - Git (optional, only for the Git panel)
+
+            ### Verify
+
+            After installing, the Start Menu entry, window icon, and
+            installer icon should all show the CodeCompass compass badge.
           files: release-artifacts/*

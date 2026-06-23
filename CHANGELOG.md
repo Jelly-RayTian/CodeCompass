@@ -2,6 +2,66 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [Unreleased] — v0.1.0-alpha polish pass
+
+### Icons
+
+- Replaced Tauri placeholder icons with the original CodeCompass compass
+  badge, regenerated via `npx tauri icon` from `icon-source.svg` (all
+  PNG sizes, `.ico`, `.icns`, Windows Store square logos).
+
+### Large-repository safety
+
+- Dependency graph now **truncates** at 500 nodes with a `truncated` flag
+  and UI warning instead of returning a hard error, so thousand-file
+  repos degrade gracefully.
+- New `totalGraphNodes` field reports the true participant count.
+
+### Error messages
+
+- `AppError` now exposes a stable `code()` and an actionable
+  `user_message()` explaining what failed, likely cause, data-safety,
+  and the next user step. Added `OversizedFile` variant.
+
+### Testing
+
+- 9 new failure-path integration tests (missing git, git failure, large
+  file truncation, analysis cancellation, concurrent scan, deleted
+  workspace, malformed UTF-8, interrupted-run recovery, graph
+  truncation). Total Rust tests: 96.
+
+### Performance
+
+- Added a reproducible Criterion benchmark harness plus a single-shot
+  summary runner generating 100/1,000/5,000-file fixtures at runtime.
+- `docs/benchmarks.md` with measured results.
+
+### Privacy
+
+- Audited runtime network behavior. Found and **fixed** a Monaco Editor
+  CDN loader default: Monaco is now bundled locally via Vite web workers
+  (`src/lib/monacoConfig.ts`), preserving the no-network guarantee.
+- New `docs/privacy-audit.md` with evidence.
+
+### Release engineering
+
+- Version-alignment script `scripts/check-versions.mjs` (package.json,
+  Cargo.toml, tauri.conf.json, git tag).
+- CI uses `npm ci`; least-privilege `permissions` on both workflows.
+- Release workflow validates the tag version before building and clearly
+  notes unsigned installers.
+
+### Documentation
+
+- Recruiter-friendly README with badges, logo, architecture, demo,
+  privacy, benchmarks, and screenshot gallery placeholders.
+- New `docs/architecture.md` (expanded), `docs/technical-decisions.md`,
+  `docs/portfolio-overview.md`, `docs/benchmarks.md`,
+  `docs/privacy-audit.md`.
+- `LICENSE` file added (MIT).
+- Test matrix, releasing, and smoke-test checklists updated with final
+  totals and icon/privacy verification steps.
+
 ## [1.0.0] — 2026-06-23
 
 ### Foundation

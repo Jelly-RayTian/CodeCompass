@@ -297,6 +297,15 @@ export function Graph(): JSX.Element {
             )}
           </div>
 
+          {graphData.truncated && (
+            <div className="banner banner-warning" role="status">
+              This workspace has {graphData.totalGraphNodes} files with
+              dependencies — more than the {graphData.nodes.length} shown. The
+              graph was truncated to keep the view responsive. Use the path or
+              directory filter above to focus on a subset.
+            </div>
+          )}
+
           {graphData.cycles.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 className="section-title">

@@ -16,13 +16,15 @@ pub struct SourceFile {
     pub truncated: bool,
 }
 
-#[tauri::command]
-pub fn read_source_file(
-    db: State<'_, Database>,
+/// Core logic for reading a source file, separated from the Tauri
+/// `State<Database>` wrapper so it can be unit/integration-tested with a
+/// plain `&Database`.
+pub fn read_source_file_struct(
+    db: &Database,
     workspace_id: i64,
-    relative_path: String,
+    relative_path: &str,
 ) -> Result<SourceFile, AppError> {
-    let root = match get_folder_path(&db, workspace_id)? {
+    let root = match get_folder_path(db, workspace_id)? {
         Some(p) => std::path::PathBuf::from(p),
         None => {
             return Err(AppError::FolderNotFound(format!(
@@ -32,7 +34,7 @@ pub fn read_source_file(
         }
     };
 
-    let absolute = root.join(&relative_path);
+    let absolute = root.join(relative_path);
 
     // Security: ensure the resolved path stays inside the workspace root.
     if !path_is_inside_or_equal(&root, &absolute) {
@@ -62,7 +64,7 @@ pub fn read_source_file(
         std::fs::read_to_string(&absolute)?
     };
 
-    let language = detect_language(&relative_path);
+    let language = detect_language(relative_path);
     let total_lines = content.lines().count() as i64;
 
     Ok(SourceFile {
@@ -71,6 +73,15 @@ pub fn read_source_file(
         total_lines,
         truncated,
     })
+}
+
+#[tauri::command]
+pub fn read_source_file(
+    db: State<'_, Database>,
+    workspace_id: i64,
+    relative_path: String,
+) -> Result<SourceFile, AppError> {
+    read_source_file_struct(&db, workspace_id, &relative_path)
 }
 
 fn detect_language(path: &str) -> String {

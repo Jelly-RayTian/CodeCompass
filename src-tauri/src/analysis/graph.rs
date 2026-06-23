@@ -34,6 +34,13 @@ pub struct CycleInfo {
 }
 
 /// The complete dependency graph for a workspace.
+///
+/// When the number of import-participating nodes exceeds `MAX_GRAPH_NODES`,
+/// the graph is **truncated** rather than refused: `nodes`/`edges`/`cycles`
+/// contain only the first `MAX_GRAPH_NODES` nodes (ordered by relative path),
+/// `total_graph_nodes` holds the true count, and `truncated` is `true`.
+/// The frontend uses this to show a clear warning and offer filters instead
+/// of leaving the user with a silent failure.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DependencyGraph {
@@ -42,13 +49,26 @@ pub struct DependencyGraph {
     pub cycles: Vec<CycleInfo>,
     pub total_files: i64,
     pub total_imports: i64,
+    /// True number of nodes that *would* participate in the graph before
+    /// truncation. Equals `nodes.len()` when not truncated.
+    pub total_graph_nodes: i64,
+    /// `true` when the graph was truncated to `MAX_GRAPH_NODES` nodes.
+    pub truncated: bool,
 }
 
-const MAX_GRAPH_NODES: usize = 500;
+/// Maximum number of nodes returned in a single graph response. Larger
+/// workspaces are truncated with `truncated = true` to keep the UI
+/// responsive; the user can narrow the view with path/directory filters.
+pub const MAX_GRAPH_NODES: usize = 500;
 
 /// Builds a file-level dependency graph from the `imports` table for a
 /// workspace. Nodes are indexed files that have imports or are imported by
 /// other files. Edges are resolved import relationships.
+///
+/// Large-repo safety: when more than `MAX_GRAPH_NODES` files participate in
+/// imports, only the first `MAX_GRAPH_NODES` (by relative path) are returned
+/// and `truncated` is set. Edges and cycles are computed over the returned
+/// node set only, so the response size is bounded.
 pub fn build_graph(db: &Database, workspace_id: i64) -> Result<DependencyGraph, AppError> {
     let conn = db.lock()?;
 
@@ -84,13 +104,16 @@ pub fn build_graph(db: &Database, workspace_id: i64) -> Result<DependencyGraph, 
         })?
         .collect::<Result<Vec<_>, _>>()?;
 
-    if file_rows.len() > MAX_GRAPH_NODES {
-        return Err(AppError::InvalidInput(format!(
-            "Graph too large: {} nodes (max {})",
-            file_rows.len(),
-            MAX_GRAPH_NODES
-        )));
-    }
+    let total_graph_nodes = file_rows.len() as i64;
+    let truncated = file_rows.len() > MAX_GRAPH_NODES;
+    let kept_rows: Vec<(i64, String, String, Option<String>)> = if truncated {
+        file_rows.into_iter().take(MAX_GRAPH_NODES).collect()
+    } else {
+        file_rows
+    };
+
+    // Keep only edges whose both endpoints are in the returned node set.
+    let kept_ids: HashSet<i64> = kept_rows.iter().map(|(id, _, _, _)| *id).collect();
 
     // Collect edges.
     let mut edge_stmt = conn.prepare(
@@ -112,17 +135,17 @@ pub fn build_graph(db: &Database, workspace_id: i64) -> Result<DependencyGraph, 
         .collect::<Result<Vec<_>, _>>()?;
 
     // Build adjacency for incoming/outgoing counts.
+    // Counts are computed over the *full* edge set so the returned nodes
+    // show realistic degree even when the graph is truncated.
     let mut incoming: HashMap<i64, i64> = HashMap::new();
     let mut outgoing: HashMap<i64, i64> = HashMap::new();
-    let mut adj: HashMap<i64, Vec<i64>> = HashMap::new();
 
     for (src, tgt, _typ, _ext) in &edge_rows {
         *outgoing.entry(*src).or_insert(0) += 1;
         *incoming.entry(*tgt).or_insert(0) += 1;
-        adj.entry(*src).or_default().push(*tgt);
     }
 
-    let nodes: Vec<GraphNode> = file_rows
+    let nodes: Vec<GraphNode> = kept_rows
         .iter()
         .map(|(id, name, relative_path, ext)| GraphNode {
             file_id: *id,
@@ -134,8 +157,11 @@ pub fn build_graph(db: &Database, workspace_id: i64) -> Result<DependencyGraph, 
         })
         .collect();
 
+    // Edges returned to the frontend are limited to those between kept nodes
+    // to avoid referencing missing nodes.
     let edges: Vec<GraphEdge> = edge_rows
         .iter()
+        .filter(|(src, tgt, _, _)| kept_ids.contains(src) && kept_ids.contains(tgt))
         .map(|(src, tgt, typ, ext)| GraphEdge {
             source_file_id: *src,
             target_file_id: *tgt,
@@ -152,6 +178,8 @@ pub fn build_graph(db: &Database, workspace_id: i64) -> Result<DependencyGraph, 
         cycles,
         total_files,
         total_imports,
+        total_graph_nodes,
+        truncated,
     })
 }
 
@@ -376,5 +404,50 @@ mod tests {
         // a.ts has no imports, b.ts only imports external package → no internal edges.
         let graph = build_graph(&db, ws_id).unwrap();
         assert!(graph.nodes.is_empty());
+    }
+
+    #[test]
+    fn large_graph_is_truncated_not_refused() {
+        // Build a graph with more than MAX_GRAPH_NODES participants and verify
+        // it is returned with `truncated = true` rather than erroring.
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join("test.db");
+        let db = Database::open(&db_path).unwrap();
+        let folder = dir.path().join("root");
+        std::fs::create_dir(&folder).unwrap();
+        let ws_id = insert_indexed_folder(&db, &folder).unwrap().id;
+
+        // Create MAX_GRAPH_NODES + 50 files, each importing the next so they
+        // all participate in the graph.
+        let mut prev: Option<i64> = None;
+        for i in 0..(MAX_GRAPH_NODES + 50) {
+            let rel = format!("file{:04}.ts", i);
+            let id = insert_file(&db, ws_id, &rel);
+            if let Some(p) = prev {
+                insert_import(
+                    &db,
+                    p,
+                    &format!("./file{:04}", i),
+                    ImportType::StaticImport,
+                    false,
+                    Some(id),
+                );
+            }
+            prev = Some(id);
+        }
+
+        let graph = build_graph(&db, ws_id).unwrap();
+        assert!(graph.truncated, "graph should be truncated, not refused");
+        assert_eq!(graph.nodes.len(), MAX_GRAPH_NODES);
+        assert!(
+            graph.total_graph_nodes > MAX_GRAPH_NODES as i64,
+            "total_graph_nodes should reflect the real count"
+        );
+        // Every returned edge must reference only kept nodes.
+        let kept: HashSet<i64> = graph.nodes.iter().map(|n| n.file_id).collect();
+        for e in &graph.edges {
+            assert!(kept.contains(&e.source_file_id), "edge source must be kept");
+            assert!(kept.contains(&e.target_file_id), "edge target must be kept");
+        }
     }
 }

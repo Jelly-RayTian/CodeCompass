@@ -25,4 +25,8 @@ export interface DependencyGraph {
   cycles: CycleInfo[];
   totalFiles: number;
   totalImports: number;
+  /** True number of nodes that would participate before truncation. */
+  totalGraphNodes: number;
+  /** True when the graph was truncated to keep the UI responsive. */
+  truncated: boolean;
 }

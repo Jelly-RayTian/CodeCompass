@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master, main]
 
+# Least-privilege: CI only needs to read the repo and write test results.
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -22,8 +26,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (npm ci)
+        run: npm ci
+
+      - name: Version alignment
+        run: npm run check:versions
 
       - name: ESLint
         run: npm run lint

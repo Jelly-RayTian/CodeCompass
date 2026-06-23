@@ -2,6 +2,9 @@ import Editor, { type OnMount } from '@monaco-editor/react';
 import { useEffect, useRef, useState } from 'react';
 
 import { tauriClient } from '@/lib/tauriClient';
+// Side-effect import: configures @monaco-editor/loader to use the bundled
+// monaco-editor instead of the default CDN. Must run before <Editor>.
+import '@/lib/monacoConfig';
 import { LoadingState } from './LoadingState';
 
 interface CodeViewerProps {
