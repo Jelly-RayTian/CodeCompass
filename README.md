@@ -21,7 +21,18 @@ CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, un
 
 ## Quick Start
 
-### Prerequisites
+### Installation
+
+Download the latest installer from [Releases](https://github.com/Jelly-RayTian/CodeCompass/releases) and run it.
+
+- **NSIS installer**: `CodeCompass_x.x.x_x64-setup.exe`
+- **MSI installer**: `CodeCompass_x.x.x_x64_en-US.msi`
+
+> **Note**: Installers are unsigned — Windows may show a SmartScreen warning. Click "More info" → "Run anyway".
+
+**Uninstall**: Use _Settings → Apps → Installed apps_ → CodeCompass → Uninstall.
+
+### Prerequisites (Development)
 
 - [Node.js](https://nodejs.org/) >= 18
 - [Rust](https://rustup.rs/) >= 1.77
