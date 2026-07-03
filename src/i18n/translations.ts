@@ -39,6 +39,9 @@ export const en = {
     indexedFileTree: 'Indexed file tree',
     loadingFiles: 'Loading files…',
     noIndexedFiles: 'No indexed files',
+    noIndexedFolders: 'No indexed folders yet',
+    noIndexedFoldersDesc:
+      'Add a local folder to start scanning its file structure. Original files are never modified.',
     noIndexedFilesDesc: 'Run a successful scan to populate the file tree.',
     scanHistory: 'Scan history',
     noScansYet: 'No scans yet.',
@@ -174,6 +177,9 @@ export const zh: typeof en = {
     indexedFileTree: '已索引文件树',
     loadingFiles: '正在加载文件…',
     noIndexedFiles: '没有已索引的文件',
+    noIndexedFolders: '尚无已索引文件夹',
+    noIndexedFoldersDesc:
+      '添加一个本地文件夹以开始扫描其文件结构。原始文件不会被修改。',
     noIndexedFilesDesc: '运行一次成功的扫描来填充文件树。',
     scanHistory: '扫描历史',
     noScansYet: '暂无扫描记录。',

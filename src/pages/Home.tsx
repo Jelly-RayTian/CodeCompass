@@ -1,20 +1,24 @@
+import { useNavigate } from 'react-router-dom';
+
 import { tauriClient } from '@/lib/tauriClient';
 import { useAsyncData } from '@/lib/useAsyncData';
-import type { ApplicationInfo, DatabaseStatus } from '@/types';
+import type { ApplicationInfo, DatabaseStatus, IndexedFolder } from '@/types';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { useT } from '@/i18n/LanguageContext';
 
-type HomeData = { info: ApplicationInfo; db: DatabaseStatus };
+type HomeData = { info: ApplicationInfo; db: DatabaseStatus; folders: IndexedFolder[] };
 
 export function Home(): JSX.Element {
   const { t } = useT();
+  const navigate = useNavigate();
   const [state, reload] = useAsyncData<HomeData>(async () => {
-    const [info, db] = await Promise.all([
+    const [info, db, folders] = await Promise.all([
       tauriClient.getApplicationInfo(),
       tauriClient.getDatabaseStatus(),
+      tauriClient.listIndexedFolders(),
     ]);
-    return { info, db };
+    return { info, db, folders };
   });
 
   if (state.status === 'loading') {
@@ -27,12 +31,26 @@ export function Home(): JSX.Element {
     );
   }
 
-  const { info, db } = state.data;
+  const { info, db, folders } = state.data;
+  const hasFolders = folders.length > 0;
 
   return (
     <>
       <h1 className="page-title">{t.home.title}</h1>
       <p className="page-subtitle">{t.home.subtitle}</p>
+
+      <div className="home-quick-actions">
+        <button
+          className="btn btn-primary home-cta"
+          onClick={() => navigate('/workspaces')}
+          type="button"
+        >
+          {t.home.openWorkspaces}
+        </button>
+        {!hasFolders && (
+          <p className="home-hint">{t.home.scanFirst}</p>
+        )}
+      </div>
 
       <div className="card-grid">
         <div className="card">

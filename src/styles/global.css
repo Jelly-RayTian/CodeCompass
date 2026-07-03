@@ -496,6 +496,52 @@ a {
   min-height: 320px;
 }
 
+.detail-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.file-tree-filter {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.folder-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.folder-actions-primary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.folder-actions-secondary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.home-quick-actions {
+  margin-bottom: 24px;
+}
+
+.home-cta {
+  padding: 12px 24px;
+  font-size: 15px;
+}
+
+.home-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--cc-text-muted);
+}
+
 .panel-title {
   font-size: 12px;
   text-transform: uppercase;

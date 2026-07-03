@@ -2,7 +2,7 @@ use tauri::{AppHandle, Manager, State};
 
 use crate::analysis::run_analysis;
 use crate::db::analysis::list_diagnostics;
-use crate::db::imports::list_imports_for_file;
+use crate::db::imports::{list_imports_for_file, list_references_to_file};
 use crate::db::indexed_files::list_recently_analyzed_files;
 use crate::db::indexed_folders::get_folder_path;
 use crate::db::Database;
@@ -61,6 +61,17 @@ pub fn get_file_imports(
     file_id: i64,
 ) -> Result<Vec<ImportEntry>, AppError> {
     list_imports_for_file(&db, file_id)
+}
+
+/// Returns all imports that resolve to `file_id` (the files that import
+/// the given file). Efficient single indexed query replacing the old
+/// frontend per-file loop.
+#[tauri::command]
+pub fn get_references_to_file(
+    db: State<'_, Database>,
+    file_id: i64,
+) -> Result<Vec<ImportEntry>, AppError> {
+    list_references_to_file(&db, file_id)
 }
 
 #[tauri::command]

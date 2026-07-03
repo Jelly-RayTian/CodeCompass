@@ -112,6 +112,37 @@ pub fn clear_workspace_imports(db: &Database, workspace_id: i64) -> Result<(), A
     Ok(())
 }
 
+/// Returns all imports that resolve to `target_file_id` (i.e. the files
+/// that import the given file). Uses the `idx_imports_target_file` index.
+/// This is the efficient batch replacement for the old frontend loop that
+/// fetched imports for every file individually.
+pub fn list_references_to_file(
+    db: &Database,
+    target_file_id: i64,
+) -> Result<Vec<ImportEntry>, AppError> {
+    let conn = db.lock()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, source_file_id, target_specifier, resolved_target_file_id, \
+         import_type, is_external, start_line, start_column \
+         FROM imports WHERE resolved_target_file_id = ?1 \
+         ORDER BY source_file_id, start_line",
+    )?;
+    let rows = stmt.query_map(params![target_file_id], |row| {
+        Ok(ImportEntry {
+            id: row.get(0)?,
+            source_file_id: row.get(1)?,
+            target_specifier: row.get(2)?,
+            resolved_target_file_id: row.get(3)?,
+            import_type: row.get(4)?,
+            is_external: row.get::<_, i64>(5)? != 0,
+            start_line: row.get(6)?,
+            start_column: row.get(7)?,
+        })
+    })?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::Database)
+}
+
 /// Returns all imports for a workspace (used for graph building in future
 /// milestones).
 #[allow(dead_code)]
@@ -204,5 +235,74 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].target_specifier, "react");
         assert!(entries[0].is_external);
+    }
+
+    #[test]
+    fn list_references_to_file_returns_reverse_edges() {
+        let dir = tempdir().expect("temp dir");
+        let db_path = dir.path().join("test.db");
+        let db = Database::open(&db_path).expect("open");
+        let folder = dir.path().join("root");
+        std::fs::create_dir(&folder).expect("create");
+        let fid = insert_indexed_folder(&db, &folder).expect("insert").id;
+
+        use crate::db::indexed_files::FileUpsert;
+        let mk = |rel: &str| FileUpsert {
+            relative_path: rel.to_string(),
+            name: rel.to_string(),
+            parent_path: ".".to_string(),
+            extension: Some("ts".to_string()),
+            size_bytes: 100,
+            created_at: Some(1),
+            modified_at: Some(2),
+            fingerprint: format!("fp:{rel}"),
+            indexed_at: 1000,
+            last_seen_at: 1000,
+        };
+        let mut batch = vec![mk("a.ts"), mk("b.ts")];
+        upsert_files_batch(&db, fid, 0, &mut batch).expect("upsert");
+        let a_id = db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT id FROM indexed_files WHERE workspace_id = ?1 AND relative_path = 'a.ts'",
+                params![fid],
+                |row| row.get::<_, i64>(0),
+            )
+            .expect("query a");
+        let b_id = db
+            .lock()
+            .unwrap()
+            .query_row(
+                "SELECT id FROM indexed_files WHERE workspace_id = ?1 AND relative_path = 'b.ts'",
+                params![fid],
+                |row| row.get::<_, i64>(0),
+            )
+            .expect("query b");
+
+        // b.ts imports a.ts (resolved).
+        let imports_b = vec![ImportRecord {
+            source_file_id: b_id,
+            target_specifier: "./a".to_string(),
+            resolved_target: None,
+            import_type: ImportType::StaticImport,
+            is_external: false,
+            start_line: Some(1),
+            start_column: Some(1),
+        }];
+        replace_file_imports(&db, b_id, &imports_b, 2000).expect("replace");
+        db.lock()
+            .unwrap()
+            .execute(
+                "UPDATE imports SET resolved_target_file_id = ?1 WHERE source_file_id = ?2",
+                params![a_id, b_id],
+            )
+            .expect("resolve");
+
+        // Querying references TO a.ts should return b.ts's import row.
+        let refs = list_references_to_file(&db, a_id).expect("refs");
+        assert_eq!(refs.len(), 1, "should find one reference to a.ts");
+        assert_eq!(refs[0].source_file_id, b_id);
+        assert_eq!(refs[0].resolved_target_file_id, Some(a_id));
     }
 }

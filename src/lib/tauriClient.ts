@@ -100,6 +100,10 @@ export const tauriClient = {
     return call<ImportEntry[]>('get_file_imports', { fileId });
   },
 
+  getReferencesToFile(fileId: number): Promise<ImportEntry[]> {
+    return call<ImportEntry[]>('get_references_to_file', { fileId });
+  },
+
   getAnalysisDiagnostics(
     workspaceId: number,
     severity?: string,

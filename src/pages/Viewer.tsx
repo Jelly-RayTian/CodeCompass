@@ -27,18 +27,17 @@ export function Viewer(): JSX.Element {
 
   const loadImports = useCallback(async () => {
     if (workspaceId === null) return;
-    // Find the file ID first, then load imports.
+    // Find the file ID first, then load imports and references in parallel.
     try {
       const files = await tauriClient.listWorkspaceFiles(workspaceId);
       const match = files.find((f) => f.relativePath === filePath);
       if (match !== undefined) {
-        const [imp, allImports] = await Promise.all([
+        const [imp, refs] = await Promise.all([
           tauriClient.getFileImports(match.id),
-          // Get all workspace imports to find references
-          loadReferences(workspaceId, match.id),
+          tauriClient.getReferencesToFile(match.id),
         ]);
         setImports(imp);
-        setReferences(allImports);
+        setReferences(refs);
       }
     } catch {
       // Non-critical
@@ -120,28 +119,4 @@ export function Viewer(): JSX.Element {
       </div>
     </div>
   );
-}
-
-async function loadReferences(
-  workspaceId: number,
-  fileId: number,
-): Promise<ImportEntry[]> {
-  try {
-    const allFiles = await tauriClient.listWorkspaceFiles(workspaceId);
-    // Get imports for files that might reference us.
-    // Simplification: check if any file imports this file.
-    const results: ImportEntry[] = [];
-    const batch = allFiles.slice(0, 50); // Limit to avoid excessive calls
-    for (const f of batch) {
-      const fileImports = await tauriClient.getFileImports(f.id);
-      for (const imp of fileImports) {
-        if (imp.resolvedTargetFileId === fileId) {
-          results.push(imp);
-        }
-      }
-    }
-    return results;
-  } catch {
-    return [];
-  }
 }

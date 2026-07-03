@@ -20,29 +20,33 @@ import { LoadingState } from '@/components/LoadingState';
 import { SymbolSearch } from '@/components/SymbolSearch';
 import { useT } from '@/i18n/LanguageContext';
 
-function formatTimestamp(epochSeconds: number | null | undefined): string {
+function formatTimestamp(
+  epochSeconds: number | null | undefined,
+  neverLabel: string,
+): string {
   if (epochSeconds === null || epochSeconds === undefined) {
-    return 'Never';
+    return neverLabel;
   }
   return new Date(epochSeconds * 1000).toLocaleString();
 }
 
 function availabilityLabel(
   availability: IndexedFolder['availability'],
+  t: ReturnType<typeof useT>['t'],
 ): string {
   switch (availability) {
     case 'available':
-      return 'Available';
+      return t.general.available;
     case 'missing':
-      return 'Missing';
+      return t.general.missing;
     case 'inaccessible':
-      return 'Inaccessible';
+      return t.general.inaccessible;
     case 'permission_denied':
-      return 'Permission denied';
+      return t.general.permissionDenied;
     case 'not_a_directory':
-      return 'Not a directory';
+      return t.general.notADirectory;
     default:
-      return 'Unknown';
+      return t.general.unknown;
   }
 }
 
@@ -176,6 +180,7 @@ export function Workspaces(): JSX.Element {
   const [analyzingFolderId, setAnalyzingFolderId] = useState<number | null>(
     null,
   );
+  const [fileTreeFilter, setFileTreeFilter] = useState('');
   const [analysisProgress, setAnalysisProgress] = useState<
     Record<number, AnalysisProgressEvent>
   >({});
@@ -470,7 +475,18 @@ export function Workspaces(): JSX.Element {
   }
 
   const folders = foldersState.data;
-  const tree = files !== null ? buildTree(files) : null;
+  const tree =
+    files !== null
+      ? buildTree(
+          fileTreeFilter.trim() === ''
+            ? files
+            : files.filter((f) =>
+                f.relativePath
+                  .toLowerCase()
+                  .includes(fileTreeFilter.toLowerCase()),
+              ),
+        )
+      : null;
 
   return (
     <>
@@ -495,17 +511,18 @@ export function Workspaces(): JSX.Element {
 
       {completedScan !== null && (
         <div className="banner banner-success" role="status">
-          Scan complete: {completedScan.run.filesProcessed} processed,{' '}
-          {completedScan.run.filesIndexed} indexed,{' '}
-          {completedScan.run.warningCount} warnings,{' '}
-          {completedScan.run.errorCount} errors.
+          {t.workspaces.scanComplete}: {completedScan.run.filesProcessed}{' '}
+          {t.workspaces.processed}, {completedScan.run.filesIndexed}{' '}
+          {t.workspaces.indexed}, {completedScan.run.warningCount}{' '}
+          {t.workspaces.warnings}, {completedScan.run.errorCount}{' '}
+          {t.workspaces.errors}.
         </div>
       )}
 
       {folders.length === 0 ? (
         <EmptyState
-          title="No indexed folders yet"
-          description="Add a local folder to start scanning its file structure. Original files are never modified."
+          title={t.workspaces.noIndexedFolders}
+          description={t.workspaces.noIndexedFoldersDesc}
         />
       ) : (
         <div className="folder-list">
@@ -528,39 +545,52 @@ export function Workspaces(): JSX.Element {
 
                 <div className="folder-meta-grid">
                   <div>
-                    <div className="folder-meta-label">Availability</div>
+                    <div className="folder-meta-label">
+                      {t.workspaces.availability}
+                    </div>
                     <div className="folder-meta-value">
-                      {availabilityLabel(folder.availability)}
+                      {availabilityLabel(folder.availability, t)}
                     </div>
                   </div>
                   <div>
-                    <div className="folder-meta-label">Monitoring</div>
+                    <div className="folder-meta-label">
+                      {t.workspaces.monitoring}
+                    </div>
                     <div className="folder-meta-value">
-                      {folder.monitoringEnabled ? 'Enabled' : 'Disabled'}
+                      {folder.monitoringEnabled
+                        ? t.workspaces.enabled
+                        : t.workspaces.disabled}
                     </div>
                   </div>
                   <div>
-                    <div className="folder-meta-label">Scan status</div>
+                    <div className="folder-meta-label">
+                      {t.workspaces.scanStatus}
+                    </div>
                     <div className="folder-meta-value">{folder.scanStatus}</div>
                   </div>
                   <div>
-                    <div className="folder-meta-label">Files indexed</div>
+                    <div className="folder-meta-label">
+                      {t.workspaces.filesIndexed}
+                    </div>
                     <div className="folder-meta-value">
                       {status?.fileCount ?? 0}
                     </div>
                   </div>
                   <div>
                     <div className="folder-meta-label">
-                      Last successful scan
+                      {t.workspaces.lastSuccessfulScan}
                     </div>
                     <div className="folder-meta-value">
-                      {formatTimestamp(folder.lastSuccessfulScanAt)}
+                      {formatTimestamp(
+                        folder.lastSuccessfulScanAt,
+                        t.general.never,
+                      )}
                     </div>
                   </div>
                   <div>
-                    <div className="folder-meta-label">Added</div>
+                    <div className="folder-meta-label">{t.workspaces.added}</div>
                     <div className="folder-meta-value">
-                      {formatTimestamp(folder.addedAt)}
+                      {formatTimestamp(folder.addedAt, t.general.never)}
                     </div>
                   </div>
                 </div>
@@ -568,12 +598,13 @@ export function Workspaces(): JSX.Element {
                 {isScanning && status !== undefined && (
                   <div className="scan-progress">
                     <div className="scan-phase">
-                      Phase: {status.run.phase ?? 'scanning'}
+                      {t.workspaces.phase}: {status.run.phase ?? 'scanning'}
                     </div>
                     <div className="scan-counters">
-                      Processed {status.run.filesProcessed} · Indexed{' '}
-                      {status.run.filesIndexed} · Warnings{' '}
-                      {status.run.warningCount} · Errors {status.run.errorCount}
+                      {t.workspaces.processed} {status.run.filesProcessed} ·{' '}
+                      {t.workspaces.indexed} {status.run.filesIndexed} ·{' '}
+                      {t.workspaces.warnings} {status.run.warningCount} ·{' '}
+                      {t.workspaces.errors} {status.run.errorCount}
                     </div>
                   </div>
                 )}
@@ -584,9 +615,11 @@ export function Workspaces(): JSX.Element {
                     if (ap === undefined) return null;
                     return (
                       <div className="scan-progress">
-                        <div className="scan-phase">Analyzing…</div>
+                        <div className="scan-phase">
+                          {t.workspaces.analyzing}
+                        </div>
                         <div className="scan-counters">
-                          Files {ap.filesProcessed} / {ap.filesTotal} · Parsed{' '}
+                          {ap.filesProcessed} / {ap.filesTotal} ·{' '}
                           {ap.filesParsed}
                         </div>
                       </div>
@@ -594,69 +627,73 @@ export function Workspaces(): JSX.Element {
                   })()}
 
                 <div className="folder-actions">
-                  {isScanning ? (
-                    <button
-                      className="btn btn-danger"
-                      onClick={handleCancelScan}
-                      type="button"
-                    >
-                      Cancel scan
-                    </button>
-                  ) : (
-                    <>
+                  <div className="folder-actions-primary">
+                    {isScanning ? (
                       <button
-                        className="btn btn-primary"
-                        disabled={folder.availability !== 'available'}
-                        onClick={() => handleScan(folder.id)}
+                        className="btn btn-danger"
+                        onClick={handleCancelScan}
                         type="button"
                       >
-                        Scan folder
+                        {t.workspaces.cancelScan}
                       </button>
+                    ) : (
+                      <>
+                        <button
+                          className="btn btn-primary"
+                          disabled={folder.availability !== 'available'}
+                          onClick={() => handleScan(folder.id)}
+                          type="button"
+                        >
+                          {t.workspaces.scanFolder}
+                        </button>
+                        <button
+                          className="btn btn-primary"
+                          disabled={
+                            folder.availability !== 'available' ||
+                            analyzingFolderId === folder.id
+                          }
+                          onClick={() => handleAnalyze(folder.id)}
+                          type="button"
+                        >
+                          {analyzingFolderId === folder.id
+                            ? t.workspaces.analyzing
+                            : t.workspaces.analyze}
+                        </button>
+                      </>
+                    )}
+                    {analyzingFolderId === folder.id && (
                       <button
-                        className="btn btn-primary"
-                        disabled={
-                          folder.availability !== 'available' ||
-                          analyzingFolderId === folder.id
-                        }
-                        onClick={() => handleAnalyze(folder.id)}
+                        className="btn btn-danger"
+                        onClick={handleCancelAnalysis}
                         type="button"
                       >
-                        {analyzingFolderId === folder.id
-                          ? 'Analyzing…'
-                          : 'Analyze'}
+                        {t.workspaces.cancel}
                       </button>
-                    </>
-                  )}
-                  {analyzingFolderId === folder.id && (
+                    )}
+                  </div>
+                  <div className="folder-actions-secondary">
                     <button
-                      className="btn btn-danger"
-                      onClick={handleCancelAnalysis}
+                      className={`btn btn-secondary ${isSelected ? 'active' : ''}`}
+                      onClick={() => handleSelectFolder(folder.id)}
                       type="button"
                     >
-                      Cancel
+                      {t.workspaces.viewFiles}
                     </button>
-                  )}
-                  <button
-                    className={`btn btn-secondary ${isSelected ? 'active' : ''}`}
-                    onClick={() => handleSelectFolder(folder.id)}
-                    type="button"
-                  >
-                    View files
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => tauriClient.revealFolder(folder.path)}
-                    type="button"
-                  >
-                    Reveal
-                  </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleRemove(folder.id)}
-                    type="button"
-                  >
-                    Remove
-                  </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => tauriClient.revealFolder(folder.path)}
+                      type="button"
+                    >
+                      {t.workspaces.reveal}
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleRemove(folder.id)}
+                      type="button"
+                    >
+                      {t.workspaces.remove}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -666,16 +703,25 @@ export function Workspaces(): JSX.Element {
 
       {selectedFolderId !== null && (
         <div className="workspace-detail">
-          <h2 className="section-title">Files &amp; History</h2>
+          <h2 className="section-title">{t.workspaces.filesAndHistory}</h2>
           <div className="detail-grid">
             <div className="detail-panel">
-              <div className="panel-title">Indexed file tree</div>
+              <div className="panel-title">{t.workspaces.indexedFileTree}</div>
+              {files !== null && files.length > 0 && (
+                <input
+                  className="input file-tree-filter"
+                  placeholder={t.general.search}
+                  value={fileTreeFilter}
+                  onChange={(e) => setFileTreeFilter(e.target.value)}
+                  type="search"
+                />
+              )}
               {filesLoading ? (
-                <LoadingState label="Loading files\u2026" />
+                <LoadingState label={t.workspaces.loadingFiles} />
               ) : tree === null || tree.children.length === 0 ? (
                 <EmptyState
-                  title="No indexed files"
-                  description="Run a successful scan to populate the file tree."
+                  title={t.workspaces.noIndexedFiles}
+                  description={t.workspaces.noIndexedFilesDesc}
                 />
               ) : (
                 <div className="file-tree">
@@ -694,33 +740,37 @@ export function Workspaces(): JSX.Element {
                   <div className="card file-detail">
                     <div className="panel-title">{selectedFile.name}</div>
                     <div className="file-detail-row">
-                      <span>Relative path</span>
+                      <span>{t.graph.path}</span>
                       <span>{selectedFile.relativePath}</span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Extension</span>
+                      <span>{t.workspaces.availability}</span>
                       <span>{selectedFile.extension ?? '-'}</span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Size</span>
+                      <span>{t.workspaces.filesIndexed}</span>
                       <span>{selectedFile.sizeBytes} bytes</span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Modified</span>
-                      <span>{formatTimestamp(selectedFile.modifiedAt)}</span>
+                      <span>{t.workspaces.lastSuccessfulScan}</span>
+                      <span>
+                        {formatTimestamp(selectedFile.modifiedAt, t.general.never)}
+                      </span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Created</span>
-                      <span>{formatTimestamp(selectedFile.createdAt)}</span>
+                      <span>{t.workspaces.added}</span>
+                      <span>
+                        {formatTimestamp(selectedFile.createdAt, t.general.never)}
+                      </span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Fingerprint</span>
+                      <span>{t.workspaces.scanStatus}</span>
                       <span className="mono">
                         {selectedFile.fingerprint ?? '-'}
                       </span>
                     </div>
                     <div className="file-detail-row">
-                      <span>Status</span>
+                      <span>{t.workspaces.scanStatus}</span>
                       <span
                         className={changeStatusClass(selectedFile.changeStatus)}
                       >
@@ -739,17 +789,19 @@ export function Workspaces(): JSX.Element {
                       }
                       type="button"
                     >
-                      View source
+                      {t.workspaces.viewSource}
                     </button>
                   </div>
 
                   {fileImports !== null && (
                     <div className="card file-detail">
                       <div className="panel-title">
-                        Imports ({fileImports.length})
+                        {t.workspaces.imports} ({fileImports.length})
                       </div>
                       {fileImports.length === 0 ? (
-                        <div className="muted">No imports found.</div>
+                        <div className="muted">
+                          {t.workspaces.noImportsFound}
+                        </div>
                       ) : (
                         <ul className="history-list">
                           {fileImports.map((imp) => (
@@ -773,17 +825,18 @@ export function Workspaces(): JSX.Element {
               )}
 
               <div className="card scan-history">
-                <div className="panel-title">Scan history</div>
+                <div className="panel-title">{t.workspaces.scanHistory}</div>
                 {scanHistory === null || scanHistory.length === 0 ? (
-                  <div className="muted">No scans yet.</div>
+                  <div className="muted">{t.workspaces.noScansYet}</div>
                 ) : (
                   <ul className="history-list">
                     {scanHistory.map((run) => (
                       <li key={run.id} className="history-item">
                         <div className="history-status">{run.status}</div>
                         <div className="history-meta">
-                          {formatTimestamp(run.startedAt)} · processed{' '}
-                          {run.filesProcessed}, indexed {run.filesIndexed}
+                          {formatTimestamp(run.startedAt, t.general.never)} ·{' '}
+                          {t.workspaces.processed} {run.filesProcessed},{' '}
+                          {t.workspaces.indexed} {run.filesIndexed}
                         </div>
                         {run.errorMessage !== null && (
                           <div className="history-error">
@@ -799,7 +852,7 @@ export function Workspaces(): JSX.Element {
               {diagnostics !== null && diagnostics.length > 0 && (
                 <div className="card scan-history">
                   <div className="panel-title">
-                    Analysis Diagnostics ({diagnostics.length})
+                    {t.workspaces.analysisDiagnostics} ({diagnostics.length})
                   </div>
                   <ul className="history-list">
                     {diagnostics.slice(0, 20).map((d) => (
@@ -823,26 +876,24 @@ export function Workspaces(): JSX.Element {
       {removingId !== null && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal" role="dialog" aria-modal="true">
-            <div className="modal-title">Remove indexed folder?</div>
-            <p className="modal-body">
-              This will remove Chronicle&apos;s index for this folder and stop
-              future scans. Your original files will not be deleted, moved, or
-              changed.
-            </p>
+            <div className="modal-title">
+              {t.workspaces.removeConfirmTitle}
+            </div>
+            <p className="modal-body">{t.workspaces.removeConfirmBody}</p>
             <div className="modal-actions">
               <button
                 className="btn btn-secondary"
                 onClick={() => setRemovingId(null)}
                 type="button"
               >
-                Cancel
+                {t.workspaces.cancelBtn}
               </button>
               <button
                 className="btn btn-danger"
                 onClick={confirmRemove}
                 type="button"
               >
-                Remove
+                {t.workspaces.removeBtn}
               </button>
             </div>
           </div>

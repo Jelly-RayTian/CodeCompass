@@ -51,6 +51,7 @@ pub fn run() {
             commands::analysis::start_analysis,
             commands::analysis::cancel_analysis,
             commands::analysis::get_file_imports,
+            commands::analysis::get_references_to_file,
             commands::analysis::get_analysis_diagnostics,
             commands::analysis::get_analyzed_files,
             commands::application::get_application_info,
