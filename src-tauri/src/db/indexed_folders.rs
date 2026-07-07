@@ -61,9 +61,16 @@ fn compute_availability(path: &str) -> String {
 
 /// Checks whether a normalized path is already indexed exactly.
 pub fn find_duplicate(db: &Database, path: &Path) -> Result<Option<i64>, AppError> {
+    // Normalize the candidate so comparisons match the stored canonicalized
+    // paths even when the caller passes a different-cased or non-canonical
+    // path (common on Windows and in tests).
+    let normalized_candidate = match normalize_existing_path(path) {
+        Ok(p) => p,
+        Err(_) => path.to_path_buf(),
+    };
     let folders = list_indexed_folders(db)?;
     Ok(folders.into_iter().find_map(|f| {
-        if paths_equal(Path::new(&f.path), path) {
+        if paths_equal(Path::new(&f.path), &normalized_candidate) {
             Some(f.id)
         } else {
             None
@@ -77,16 +84,20 @@ pub fn find_nested_parents(
     db: &Database,
     candidate: &Path,
 ) -> Result<Vec<(String, String)>, AppError> {
+    let normalized_candidate = match normalize_existing_path(candidate) {
+        Ok(p) => p,
+        Err(_) => candidate.to_path_buf(),
+    };
     let folders = list_indexed_folders(db)?;
     let mut parents = Vec::new();
     for folder in folders {
         let folder_path = Path::new(&folder.path);
-        if path_is_strict_descendant(folder_path, candidate) {
+        if path_is_strict_descendant(folder_path, &normalized_candidate) {
             parents.push((
                 folder.path.clone(),
                 format!(
                     "{} is already covered by the indexed folder {}",
-                    candidate.display(),
+                    normalized_candidate.display(),
                     folder.path
                 ),
             ));
