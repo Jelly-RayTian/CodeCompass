@@ -2,7 +2,46 @@
 
 All notable changes to CodeCompass are documented in this file.
 
-## [Unreleased] — v0.1.0-alpha polish pass
+## [0.1.1] — 2026-07-07
+
+### Stability & bug fixes
+
+- Fixed variable-name typo in scanner reconciliation path (`reconciliation_failed`).
+- Fixed stale "Chronicle" product-name references in deletion comments.
+- Split `LanguageContext.tsx` into `LanguageProvider.tsx`, `LangContext.ts`,
+  `useT.ts`, and `types.ts` to satisfy React Fast Refresh and remove the ESLint
+  `only-export-components` warning.
+- Added React Router v7 future flags (`v7_startTransition`,
+  `v7_relativeSplatPath`) to silence upgrade warnings.
+- Wrapped `ErrorState` retry button with explicit `type="button"`.
+
+### Error messages
+
+- Added `AppError::FileNotFound` variant with stable code `file_not_found` and
+  actionable user message explaining the file may have moved after the last scan.
+- `read_source_file` now returns `file_not_found` instead of a generic
+  `invalid_input` error when a source file is missing.
+
+### Startup & responsiveness
+
+- Scanner now emits `scan:progress` events every 10 files (in addition to the
+  existing batch flush at 100 files), so the UI stays alive on large repositories.
+- Analysis runner progress events now emit every 10 files instead of every 50.
+
+### i18n
+
+- `Graph.tsx` now uses translation keys instead of hardcoded English strings.
+- `Insights.tsx` now uses translation keys for titles, empty states, and labels.
+- Added `truncatedWarning`, and `insights.*` translation keys to both English and
+  Chinese bundles.
+
+### Testing
+
+- Added `missing_source_file_returns_file_not_found` integration test.
+- Added frontend `i18n.test.tsx` covering default language and `setLang` switch.
+- Frontend test count: 8 → 10; Rust test count: 96 → 98; total: 104 → 108.
+
+## [Unreleased]
 
 ### Icons
 

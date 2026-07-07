@@ -8,8 +8,8 @@ npm run tauri:build
 
 Artifacts are in `src-tauri/target/release/bundle/`:
 
-- NSIS: `bundle/nsis/CodeCompass_0.1.0_x64-setup.exe`
-- MSI: `bundle/msi/CodeCompass_0.1.0_x64_en-US.msi`
+- NSIS: `bundle/nsis/CodeCompass_0.1.1_x64-setup.exe`
+- MSI: `bundle/msi/CodeCompass_0.1.1_x64_en-US.msi`
 
 ## Versioning
 
@@ -28,7 +28,7 @@ A release-time script fails when any of these disagree:
 
 ```bash
 npm run check:versions                       # internal consistency
-node scripts/check-versions.mjs --tag=v0.1.0-alpha   # also check the tag
+node scripts/check-versions.mjs --tag=v0.1.1   # also check the tag
 ```
 
 The CI and Release workflows run `check:versions` automatically; the
@@ -47,8 +47,8 @@ npm run check:versions
 npm run tauri:build
 
 # 3. Tag exactly (do not let CI infer the version):
-git tag v0.1.0-alpha
-git push origin v0.1.0-alpha
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 Pushing a tag matching `v*` triggers the GitHub Actions release workflow

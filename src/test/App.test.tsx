@@ -7,7 +7,7 @@ import { mockTauriCommand } from '@/test/setup';
 
 const mockAppInfo = {
   name: 'CodeCompass',
-  version: '0.1.0',
+  version: '0.1.1',
   buildTimestamp: '2026-01-01T00:00:00Z',
 };
 
@@ -24,15 +24,15 @@ describe('App', () => {
     mockTauriCommand('list_indexed_folders_command', async () => []);
   });
 
-  it('renders the application shell with brand text', () => {
+  it('renders the application shell with brand text', async () => {
     render(<App />);
-    expect(screen.getByText('CodeCompass')).toBeInTheDocument();
+    expect(await screen.findByText('CodeCompass')).toBeInTheDocument();
     expect(screen.getByText('Understand any codebase')).toBeInTheDocument();
   });
 
   it('shows the home page with application version on initial load', async () => {
     render(<App />);
-    expect(await screen.findByText('0.1.0')).toBeInTheDocument();
+    expect(await screen.findByText('0.1.1')).toBeInTheDocument();
   });
 
   it('shows database status on the home page', async () => {

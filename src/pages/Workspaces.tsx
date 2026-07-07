@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { SymbolSearch } from '@/components/SymbolSearch';
-import { useT } from '@/i18n/LanguageContext';
+import { useT } from '@/i18n/useT';
 
 function formatTimestamp(
   epochSeconds: number | null | undefined,

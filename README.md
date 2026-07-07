@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D4)](#installation)
 
-**Status: v0.1.0 Alpha** — core feature set implemented, undergoing stability and usability testing.
+**Status: v0.1.1 Alpha** — stability and polish release. Bug fixes, faster progress updates, clearer error messages, and additional tests.
 
 CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, understand, and assess codebases — entirely offline. No cloud uploads, no AI training on your source code, no network requests after installation.
 
@@ -79,8 +79,8 @@ for the rationale behind each technology choice.
 
 Download from [Releases](https://github.com/Jelly-RayTian/CodeCompass/releases):
 
-- **NSIS**: `CodeCompass_0.1.0_x64-setup.exe` (required)
-- **MSI**: `CodeCompass_0.1.0_x64_en-US.msi` (optional)
+- **NSIS**: `CodeCompass_0.1.1_x64-setup.exe` (required)
+- **MSI**: `CodeCompass_0.1.1_x64_en-US.msi` (optional)
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 
@@ -101,7 +101,7 @@ npm run tauri:dev
 npm test                       # frontend tests (Vitest)
 npm run lint                   # ESLint
 npm run typecheck              # TypeScript strict check
-cd src-tauri && cargo test     # 96 Rust tests
+cd src-tauri && cargo test     # 98 Rust tests
 cd src-tauri && cargo clippy --all-targets -- -D warnings
 ```
 

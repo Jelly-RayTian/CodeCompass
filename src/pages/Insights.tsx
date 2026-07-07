@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { tauriClient } from '@/lib/tauriClient';
 import { useAsyncData } from '@/lib/useAsyncData';
 import { LoadingState } from '@/components/LoadingState';
+import { useT } from '@/i18n/useT';
 import type {
   EntryPoint,
   IndexedFolder,
@@ -23,6 +24,7 @@ function confidenceBar(pct: number): string {
 
 export function Insights(): JSX.Element {
   const navigate = useNavigate();
+  const { t } = useT();
   const [foldersState] = useAsyncData<IndexedFolder[]>(() =>
     tauriClient.listIndexedFolders(),
   );
@@ -45,7 +47,7 @@ export function Insights(): JSX.Element {
   }, [selectedId]);
 
   if (foldersState.status === 'loading') {
-    return <LoadingState label="Loading…" />;
+    return <LoadingState label={t.general.loading} />;
   }
   if (foldersState.status === 'error') {
     return <div className="banner banner-warning">{foldersState.message}</div>;
@@ -54,11 +56,8 @@ export function Insights(): JSX.Element {
 
   return (
     <div className="insights-page">
-      <h1 className="page-title">Insights</h1>
-      <p className="page-subtitle">
-        Entry points, reading paths, and structural findings for understanding a
-        new codebase.
-      </p>
+      <h1 className="page-title">{t.insights.title}</h1>
+      <p className="page-subtitle">{t.insights.subtitle}</p>
 
       <div className="toolbar">
         <select
@@ -66,7 +65,7 @@ export function Insights(): JSX.Element {
           value={selectedId ?? ''}
           onChange={(e) => setSelectedId(Number(e.target.value) || null)}
         >
-          <option value="">Select a folder…</option>
+          <option value="">{t.graph.selectFolder}</option>
           {folders.map((f: IndexedFolder) => (
             <option key={f.id} value={f.id}>
               {f.name}
@@ -77,18 +76,18 @@ export function Insights(): JSX.Element {
 
       {error !== null && <div className="banner banner-warning">{error}</div>}
 
-      {loading && <LoadingState label="Analyzing…" />}
+      {loading && <LoadingState label={t.insights.analyzing} />}
 
       {insights !== null && !loading && (
         <>
           {/* Entry Points */}
           <section>
             <h2 className="section-title">
-              Entry Points ({insights.entryPoints.length})
+              {t.insights.entryPoints} ({insights.entryPoints.length})
             </h2>
             {insights.entryPoints.length === 0 ? (
               <div className="card">
-                <div className="muted">No entry points detected.</div>
+                <div className="muted">{t.insights.noEntryPoints}</div>
               </div>
             ) : (
               <div className="finding-list">
@@ -130,13 +129,11 @@ export function Insights(): JSX.Element {
           {/* Reading Path */}
           <section>
             <h2 className="section-title">
-              Reading Path ({insights.readingPath.length} files)
+              {t.insights.readingPath} ({insights.readingPath.length} files)
             </h2>
             {insights.readingPath.length === 0 ? (
               <div className="card">
-                <div className="muted">
-                  No reading path available. Run Analyze first.
-                </div>
+                <div className="muted">{t.insights.noReadingPath}</div>
               </div>
             ) : (
               <div className="reading-path">
@@ -160,7 +157,9 @@ export function Insights(): JSX.Element {
                   >
                     <span className="reading-order">{item.order + 1}.</span>
                     <span className="reading-name">{item.name}</span>
-                    <span className="reading-depth">depth {item.depth}</span>
+                    <span className="reading-depth">
+                      {t.insights.depth} {item.depth}
+                    </span>
                     <span className="reading-reason">{item.reason}</span>
                   </div>
                 ))}
@@ -171,11 +170,11 @@ export function Insights(): JSX.Element {
           {/* Structural Findings */}
           <section>
             <h2 className="section-title">
-              Structural Findings ({insights.findings.length})
+              {t.insights.structuralFindings} ({insights.findings.length})
             </h2>
             {insights.findings.length === 0 ? (
               <div className="card">
-                <div className="muted">No findings. Everything looks good.</div>
+                <div className="muted">{t.insights.noFindings}</div>
               </div>
             ) : (
               <div className="finding-list">
@@ -189,21 +188,27 @@ export function Insights(): JSX.Element {
                     </div>
                     <p className="muted">{f.description}</p>
                     <div className="finding-evidence">
-                      <strong>Evidence:</strong>
+                      <strong>{t.insights.evidence}</strong>
                       <ul>
                         {f.evidence.slice(0, 5).map((e, j) => (
                           <li key={j}>{e}</li>
                         ))}
                         {f.evidence.length > 5 && (
-                          <li>…and {f.evidence.length - 5} more</li>
+                          <li>
+                            {t.insights.andMore.replace(
+                              '{count}',
+                              String(f.evidence.length - 5),
+                            )}
+                          </li>
                         )}
                       </ul>
                     </div>
                     <p className="muted" style={{ fontSize: 11 }}>
-                      <strong>Limitation:</strong> {f.limitation}
+                      <strong>{t.insights.limitation}</strong> {f.limitation}
                     </p>
                     <p className="muted" style={{ fontSize: 11 }}>
-                      <strong>How to investigate:</strong> {f.investigation}
+                      <strong>{t.insights.investigation}</strong>{' '}
+                      {f.investigation}
                     </p>
                   </div>
                 ))}

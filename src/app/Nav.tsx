@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
-import { useT } from '@/i18n/LanguageContext';
+import { useT } from '@/i18n/useT';
 
 interface NavItem {
   to: string;

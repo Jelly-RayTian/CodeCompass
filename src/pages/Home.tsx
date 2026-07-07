@@ -5,7 +5,7 @@ import { useAsyncData } from '@/lib/useAsyncData';
 import type { ApplicationInfo, DatabaseStatus, IndexedFolder } from '@/types';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
-import { useT } from '@/i18n/LanguageContext';
+import { useT } from '@/i18n/useT';
 
 type HomeData = { info: ApplicationInfo; db: DatabaseStatus; folders: IndexedFolder[] };
 

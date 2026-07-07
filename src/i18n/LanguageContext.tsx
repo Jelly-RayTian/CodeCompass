@@ -1,15 +1,13 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
 
+import { LangContext } from './LangContext';
 import { en, zh } from './translations';
-
-type Lang = 'en' | 'zh';
+import type { Lang } from './types';
 
 const STORAGE_KEY = 'codecompass-lang';
 
@@ -28,18 +26,6 @@ function loadLang(): Lang {
 
 const translations = { en, zh } as const;
 
-interface LangCtx {
-  lang: Lang;
-  t: typeof en;
-  setLang: (l: Lang) => void;
-}
-
-const LangContext = createContext<LangCtx>({
-  lang: 'en',
-  t: en,
-  setLang: () => {},
-});
-
 export function LanguageProvider({
   children,
 }: {
@@ -56,14 +42,10 @@ export function LanguageProvider({
     }
   }, []);
 
-  const value = useMemo<LangCtx>(
+  const value = useMemo(
     () => ({ lang, t: translations[lang], setLang }),
     [lang, setLang],
   );
 
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
-}
-
-export function useT(): LangCtx {
-  return useContext(LangContext);
 }

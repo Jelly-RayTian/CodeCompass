@@ -87,7 +87,7 @@ pub fn list_indexed_folders_command(
     fetch_indexed_folders(&db)
 }
 
-/// Removes an indexed folder and all of Chronicle's derived index data for it.
+/// Removes an indexed folder and all of CodeCompass's derived index data for it.
 /// The original files on disk are never modified.
 #[tauri::command]
 pub fn remove_indexed_folder_command(db: State<'_, Database>, id: i64) -> Result<(), AppError> {

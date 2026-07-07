@@ -87,6 +87,34 @@ fn large_file_truncation_marks_truncated_and_caps_size() {
     assert!(src.total_lines > 0);
 }
 
+// ── Missing source file ──
+
+#[test]
+fn missing_source_file_returns_file_not_found() {
+    let dir = tempdir().expect("create temp dir");
+    let root = dir.path().join("repo");
+    std::fs::create_dir(&root).expect("create repo");
+    // Do not create the file on disk.
+
+    let db_path = dir.path().join("test.db");
+    let db = Database::open(&db_path).expect("open db");
+    let ws_id = insert_indexed_folder(&db, &root).expect("insert").id;
+
+    let err = read_source_file_struct(&db, ws_id, "missing.ts")
+        .expect_err("reading a missing file must fail");
+    let payload = err.to_payload();
+    assert_eq!(
+        payload.code, "file_not_found",
+        "missing file should report file_not_found, got {}",
+        payload.code
+    );
+    assert!(
+        payload.message.contains("could not be found"),
+        "user message should explain the file is missing: {}",
+        payload.message
+    );
+}
+
 // ── Analysis cancellation ──
 
 #[test]

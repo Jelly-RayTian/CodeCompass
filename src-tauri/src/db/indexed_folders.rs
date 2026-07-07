@@ -125,7 +125,7 @@ pub fn insert_indexed_folder(db: &Database, path: &Path) -> Result<IndexedFolder
     })
 }
 
-/// Removes an indexed folder by id, deleting Chronicle's index through CASCADE.
+/// Removes an indexed folder by id, deleting CodeCompass's index through CASCADE.
 pub fn remove_indexed_folder(db: &Database, id: i64) -> Result<(), AppError> {
     let conn = db.lock()?;
     conn.execute("DELETE FROM workspaces WHERE id = ?1", params![id])?;

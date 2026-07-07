@@ -17,7 +17,7 @@ use tasks::{AnalysisManager, ScanManager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let result = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
@@ -81,6 +81,10 @@ pub fn run() {
             commands::workspaces::list_scan_runs_command,
             commands::workspaces::reveal_folder,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!());
+
+    if let Err(e) = result {
+        log::error!("failed to start CodeCompass: {e}");
+        std::process::exit(1);
+    }
 }

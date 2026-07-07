@@ -14,7 +14,11 @@ export function ErrorState({
       <div className="error-state-title">{title}</div>
       <div className="error-state-desc">{description}</div>
       {onRetry !== undefined && (
-        <button className="error-state-retry" onClick={onRetry}>
+        <button
+          className="error-state-retry"
+          onClick={onRetry}
+          type="button"
+        >
           Retry
         </button>
       )}

@@ -12,7 +12,12 @@ import { Workspaces } from '@/pages/Workspaces';
 export function App(): JSX.Element {
   return (
     <LanguageProvider>
-      <MemoryRouter>
+      <MemoryRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<Home />} />

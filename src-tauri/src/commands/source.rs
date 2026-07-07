@@ -44,10 +44,9 @@ pub fn read_source_file_struct(
     }
 
     if !absolute.is_file() {
-        return Err(AppError::InvalidInput(format!(
-            "file not found: {}",
-            relative_path
-        )));
+        return Err(AppError::FileNotFound(
+            absolute.to_string_lossy().to_string(),
+        ));
     }
 
     let meta = std::fs::metadata(&absolute)?;

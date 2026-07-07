@@ -1,8 +1,8 @@
 # Test Matrix
 
-Last updated: 2026-06-24 | Total: 104 tests
+Last updated: 2026-07-07 | Total: 108 tests
 
-## Rust Tests (96)
+## Rust Tests (98)
 
 ### Unit Tests (78)
 
@@ -39,7 +39,7 @@ Last updated: 2026-06-24 | Total: 104 tests
 | `fixture_restart_persistence`                    | DB close/reopen preserves all data            |
 | `fixture_workspace_lifecycle`                    | Register → persist → verify files untouched   |
 
-### Failure-Path Tests (9)
+### Failure-Path Tests (10)
 
 | Test                                                 | Coverage                                            |
 | ---------------------------------------------------- | --------------------------------------------------- |
@@ -53,7 +53,7 @@ Last updated: 2026-06-24 | Total: 104 tests
 | `interrupted_runs_marked_on_database_reopen`         | Crash-recovery marks running scans interrupted      |
 | `graph_truncation_caps_nodes_at_limit`               | >500-node graph truncates with `truncated` flag     |
 
-## Frontend Tests (8)
+## Frontend Tests (10)
 
 | Test                           | Coverage                            |
 | ------------------------------ | ----------------------------------- |

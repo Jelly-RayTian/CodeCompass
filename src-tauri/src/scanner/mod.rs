@@ -18,6 +18,7 @@ use crate::models::ScanProgressEvent;
 use crate::platform::{normalize_existing_path, path_is_inside_or_equal};
 
 const BATCH_SIZE: usize = 100;
+const PROGRESS_INTERVAL: usize = 10;
 
 /// Directories skipped during repository scanning.
 const IGNORED_DIRECTORIES: &[&str] = &[
@@ -152,6 +153,7 @@ pub fn scan_workspace(
     let mut warning_count: i64 = 0;
     let mut error_count: i64 = 0;
     let mut batch: Vec<FileUpsert> = Vec::with_capacity(BATCH_SIZE);
+    let mut progress_counter: usize = 0;
 
     let ignored: HashSet<&str> = IGNORED_DIRECTORIES.iter().copied().collect();
     let mut walker = WalkDir::new(&root)
@@ -251,6 +253,21 @@ pub fn scan_workspace(
             }
         }
 
+        progress_counter += 1;
+        if progress_counter >= PROGRESS_INTERVAL {
+            progress_counter = 0;
+            cb.emit_progress(ScanProgressEvent {
+                run_id,
+                workspace_id,
+                status: "running".to_string(),
+                files_processed,
+                files_indexed,
+                warning_count,
+                error_count,
+                phase: Some("walking".to_string()),
+            });
+        }
+
         if batch.len() >= BATCH_SIZE {
             flush_batch(db, workspace_id, scan_generation, &mut batch)?;
             update_scan_progress(
@@ -295,15 +312,15 @@ pub fn scan_workspace(
     // Cancelled scans skip reconciliation entirely (handled earlier).
     let should_reconcile = final_status == "completed" || final_status == "completed_with_warnings";
 
-    let mut reconcilation_failed = false;
+    let mut reconciliation_failed = false;
     if should_reconcile {
         if let Err(e) = mark_removed_files_by_generation(db, workspace_id, scan_generation) {
             log::error!("reconciliation failed: {}", e);
-            reconcilation_failed = true;
+            reconciliation_failed = true;
         }
     }
 
-    let effective_status = if reconcilation_failed {
+    let effective_status = if reconciliation_failed {
         "completed_with_errors"
     } else {
         final_status

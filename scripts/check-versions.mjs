@@ -5,7 +5,7 @@
 //
 // Usage:
 //   node scripts/check-versions.mjs            # check internal consistency
-//   node scripts/check-versions.mjs --tag v0.1.0-alpha   # also check tag
+//   node scripts/check-versions.mjs --tag v0.1.1   # also check tag
 //
 // Exits non-zero on mismatch. Intended to run in CI before building.
 

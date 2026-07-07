@@ -23,6 +23,7 @@ import type {
 import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
+import { useT } from '@/i18n/useT';
 
 const fitViewOptions: FitViewOptions = { padding: 0.2, maxZoom: 1.5 };
 
@@ -100,6 +101,7 @@ interface SelectedFileDetail {
 
 export function Graph(): JSX.Element {
   const navigate = useNavigate();
+  const { t } = useT();
   const [foldersState] = useAsyncData<IndexedFolder[]>(() =>
     tauriClient.listIndexedFolders(),
   );
@@ -219,12 +221,12 @@ export function Graph(): JSX.Element {
   );
 
   if (foldersState.status === 'loading') {
-    return <LoadingState label="Loading folders…" />;
+    return <LoadingState label={t.general.loading} />;
   }
   if (foldersState.status === 'error') {
     return (
       <ErrorState
-        title="Failed to load folders"
+        title={t.workspaces.loadError}
         description={foldersState.message}
         onRetry={() => window.location.reload()}
       />
@@ -235,10 +237,8 @@ export function Graph(): JSX.Element {
 
   return (
     <div className="graph-page">
-      <h1 className="page-title">Dependency Graph</h1>
-      <p className="page-subtitle">
-        Explore file-level import relationships across your workspace.
-      </p>
+      <h1 className="page-title">{t.graph.title}</h1>
+      <p className="page-subtitle">{t.graph.subtitle}</p>
 
       <div className="toolbar">
         <select
@@ -249,7 +249,7 @@ export function Graph(): JSX.Element {
             setSelectedFolderId(id || null);
           }}
         >
-          <option value="">Select a folder…</option>
+          <option value="">{t.graph.selectFolder}</option>
           {folders.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}
@@ -261,13 +261,13 @@ export function Graph(): JSX.Element {
           <>
             <input
               className="input"
-              placeholder="Filter by file path…"
+              placeholder={t.graph.filterByPath}
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
             <input
               className="input"
-              placeholder="Filter by directory…"
+              placeholder={t.graph.filterByDir}
               value={folderFilter}
               onChange={(e) => setFolderFilter(e.target.value)}
             />
@@ -281,35 +281,42 @@ export function Graph(): JSX.Element {
         </div>
       )}
 
-      {loading && <LoadingState label="Building dependency graph…" />}
+      {loading && <LoadingState label={t.graph.building} />}
 
       {graphData !== null && !loading && (
         <>
           <div className="graph-summary">
-            <span>{graphData.totalFiles} files indexed</span>
-            <span>{graphData.totalImports} internal imports</span>
-            <span>{graphData.nodes.length} graph nodes</span>
-            <span>{graphData.edges.length} graph edges</span>
+            <span>
+              {graphData.totalFiles} {t.graph.filesIndexed}
+            </span>
+            <span>
+              {graphData.totalImports} {t.graph.internalImports}
+            </span>
+            <span>
+              {graphData.nodes.length} {t.graph.graphNodes}
+            </span>
+            <span>
+              {graphData.edges.length} {t.graph.graphEdges}
+            </span>
             {graphData.cycles.length > 0 && (
               <span className="graph-cycle-warn">
-                {graphData.cycles.length} cycle(s) detected
+                {graphData.cycles.length} {t.graph.cycleDetected}
               </span>
             )}
           </div>
 
           {graphData.truncated && (
             <div className="banner banner-warning" role="status">
-              This workspace has {graphData.totalGraphNodes} files with
-              dependencies — more than the {graphData.nodes.length} shown. The
-              graph was truncated to keep the view responsive. Use the path or
-              directory filter above to focus on a subset.
+              {t.graph.truncatedWarning
+                .replace('{total}', String(graphData.totalGraphNodes))
+                .replace('{shown}', String(graphData.nodes.length))}
             </div>
           )}
 
           {graphData.cycles.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 className="section-title">
-                Circular Dependencies ({graphData.cycles.length})
+                {t.graph.circularDependencies} ({graphData.cycles.length})
               </h3>
               {graphData.cycles.slice(0, 5).map((cycle, i) => (
                 <div key={i} className="cycle-path">
@@ -344,7 +351,7 @@ export function Graph(): JSX.Element {
               <div className="graph-detail">
                 <h3 className="panel-title">{selectedDetail.name}</h3>
                 <div className="file-detail-row">
-                  <span>Path</span>
+                  <span>{t.graph.path}</span>
                   <span>{selectedDetail.path}</span>
                 </div>
 
@@ -360,14 +367,14 @@ export function Graph(): JSX.Element {
                   }
                   type="button"
                 >
-                  View source
+                  {t.graph.viewSource}
                 </button>
 
                 <h4 className="detail-label">
-                  Imports ({selectedDetail.imports.length})
+                  {t.graph.imports} ({selectedDetail.imports.length})
                 </h4>
                 {selectedDetail.imports.length === 0 ? (
-                  <div className="muted">No resolved imports.</div>
+                  <div className="muted">{t.graph.noResolved}</div>
                 ) : (
                   <ul className="history-list">
                     {selectedDetail.imports.map((imp, i) => (
@@ -380,10 +387,10 @@ export function Graph(): JSX.Element {
                 )}
 
                 <h4 className="detail-label">
-                  Imported by ({selectedDetail.importedBy.length})
+                  {t.graph.importedBy} ({selectedDetail.importedBy.length})
                 </h4>
                 {selectedDetail.importedBy.length === 0 ? (
-                  <div className="muted">Not imported by any file.</div>
+                  <div className="muted">{t.graph.notImported}</div>
                 ) : (
                   <ul className="history-list">
                     {selectedDetail.importedBy.map((imp, i) => (
@@ -399,18 +406,16 @@ export function Graph(): JSX.Element {
 
             {selectedDetail === null && nodes.length > 0 && (
               <div className="graph-detail">
-                <div className="panel-title">File Details</div>
-                <div className="muted">
-                  Click a node to see its imports and dependents.
-                </div>
+                <div className="panel-title">{t.graph.fileDetails}</div>
+                <div className="muted">{t.graph.clickNode}</div>
               </div>
             )}
           </div>
 
           {graphData.nodes.length === 0 && graphData.totalFiles > 0 && (
             <EmptyState
-              title="No internal dependencies found"
-              description="This workspace has files but no resolved imports between them. Run Analyze first."
+              title={t.graph.noInternalDeps}
+              description={t.graph.noInternalDepsDesc}
             />
           )}
         </>

@@ -31,6 +31,9 @@ pub enum AppError {
     #[error("Folder not found: {0}")]
     FolderNotFound(String),
 
+    #[error("File not found: {0}")]
+    FileNotFound(String),
+
     #[error("Path is not a directory: {0}")]
     NotADirectory(String),
 
@@ -70,6 +73,7 @@ impl AppError {
             Self::AppDir(_) => "app_dir",
             Self::Io(_) => "io_error",
             Self::FolderNotFound(_) => "folder_not_found",
+            Self::FileNotFound(_) => "file_not_found",
             Self::NotADirectory(_) => "not_a_directory",
             Self::DuplicateFolder(_) => "duplicate_folder",
             Self::ScanCancelled => "scan_cancelled",
@@ -93,6 +97,13 @@ impl AppError {
                  not mounted.\n\n\
                  Your saved index data is safe. Re-add the folder at its new \
                  location, or remove the missing workspace from the list."
+            ),
+            Self::FileNotFound(p) => format!(
+                "The file could not be found: {p}.\n\n\
+                 Likely cause: the file was moved, renamed, or deleted after \
+                 the last scan.\n\n\
+                 Run a fresh scan to update the index, or choose a file that \
+                 still exists."
             ),
             Self::NotADirectory(p) => format!(
                 "The selected path is a file, not a folder: {p}.\n\n\
@@ -196,6 +207,7 @@ mod tests {
     fn codes_are_stable_and_unique() {
         let cases = [
             (AppError::FolderNotFound("x".into()), "folder_not_found"),
+            (AppError::FileNotFound("x".into()), "file_not_found"),
             (AppError::NotADirectory("x".into()), "not_a_directory"),
             (AppError::DuplicateFolder("x".into()), "duplicate_folder"),
             (AppError::ScanCancelled, "scan_cancelled"),

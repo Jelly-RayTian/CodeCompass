@@ -128,7 +128,7 @@ pub fn run_analysis(
             mark_file_analysis_done(db, *file_id, &now)?;
         }
 
-        if processed % 50 == 0 {
+        if processed % 10 == 0 {
             emit_progress(
                 app,
                 AnalysisProgressEvent {
