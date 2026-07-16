@@ -1,5 +1,6 @@
 pub mod call_graph;
 pub mod entrypoint;
+pub mod evolution;
 pub mod findings;
 pub mod graph;
 pub mod health;

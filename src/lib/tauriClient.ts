@@ -14,6 +14,7 @@ import type {
   GitInfo,
   ImportEntry,
   IndexedFolder,
+  RepositoryEvolution,
   RepositoryHealth,
   ScanRun,
   ScanStatus,
@@ -214,6 +215,14 @@ export const tauriClient = {
 
   getRepositoryHealth(workspaceId: number): Promise<RepositoryHealth> {
     return call<RepositoryHealth>('get_repository_health', {
+      workspaceId,
+    });
+  },
+
+  getRepositoryEvolution(
+    workspaceId: number,
+  ): Promise<RepositoryEvolution> {
+    return call<RepositoryEvolution>('get_repository_evolution', {
       workspaceId,
     });
   },

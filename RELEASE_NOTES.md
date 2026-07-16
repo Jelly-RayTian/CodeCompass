@@ -1,73 +1,54 @@
-# CodeCompass v0.2.0 Release Notes
+# CodeCompass v0.3.0 Release Notes
 
 **Release date:** 2026-07-16  
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v0.2.0 introduces the **Repository Health Dashboard** — a new page that aggregates
-information from CodeCompass's existing static analysis, dependency graph, symbol
-index, and git history into a unified codebase health report. No AI features are used;
-all metrics are computed from local data only.
+v0.3.0 introduces the **Git Evolution** dashboard — visualize how your repository
+has changed over time through commit history, file churn, and co-change hotspots.
+All analysis is local-first; no repository data is ever uploaded.
 
 ## Highlights
 
-### Repository Health Dashboard
+### Git Evolution Dashboard
 
-- **Summary cards** show total files, analyzed files, internal imports, symbol
-  count, detected cycles, and average risk score at a glance.
-- **Risk distribution** badges break down files into low / medium / high / critical
-  risk categories.
-- **Per-file risk scoring** (0–100) using five weighted signals:
-  - File size (bytes)
-  - Line count (proxy for complexity)
-  - Import degree (coupling — both in and out)
-  - Git change churn (when available)
-  - Parse diagnostics count
-- Files in **circular dependencies** receive a 15% risk boost with an explicit
-  `is_in_cycle` flag.
-- **Risk table** listing files by descending risk with columns for score (with
-  color-coded bar), lines, imports, symbols, churn count, and cycle indicator.
-- Toggle between **top 20 risk files** and **full file list**.
-- **Limitations warning** on every page: risk scores are investigative heuristics,
-  not quality or correctness judgments.
+- **Commit Timeline** chart showing commits and file changes per month as a bar
+  chart, giving an at-a-glance view of development activity over time.
+- **File Churn** ranking showing the 20 most frequently changed files, with
+  visual proportional bars.
+- **Co-Change Hotspots** listing file pairs that changed together most often.
+- **Summary cards** with total commits, unique files changed, total file changes,
+  most active month, and date range of tracked history.
 
-### Line counting
+### Git data improvements
 
-- Analysis runner now counts source lines after reading each file and stores the
-  count in `indexed_files.line_count` (V9 migration).
-- Previously analyzed files show `line_count = 0` until re-analyzed.
+- `git_file_changes.timestamp` now stores real Unix timestamps from git log
+  (previously always 0), enabling time-based aggregation.
+- Commit depth increased from 50 to 200 commits with a 1000-file cap.
+- New `git::commit_log()` infrastructure for future commit-level features.
 
-### Internationalization
+### Data sources
 
-- Health dashboard is fully translated into English and Chinese.
-
-## Data sources
-
-The health report reuses existing data without new scanning or parsing:
-
-| Signal            | Source table(s)        |
-|-------------------|------------------------|
-| File size         | `indexed_files`        |
-| Line count        | `indexed_files` (V9)   |
-| Import degree     | `imports`              |
-| Symbol count      | `symbols`              |
-| Diagnostics       | `analysis_diagnostics` |
-| Change churn      | `git_file_changes`     |
-| Cycle membership  | DFS over `imports`     |
+| Feature          | Source                     |
+|------------------|----------------------------|
+| Commit timeline  | `git_file_changes` (month buckets) |
+| File churn       | `git_file_changes` (group by path) |
+| Co-change pairs  | `git_file_changes` (self-join)     |
+| Summary stats    | `git_file_changes` (aggregates)    |
 
 ## Known limitations
 
-- Risk scores approximate maintainability; they do not measure actual code
-  quality, runtime behavior, or correctness.
-- Cyclomatic complexity is approximated via line count — not AST-level branch counting.
-- Change churn is only available when Git analysis is enabled per workspace.
-- Line counts are only available for files analyzed after this release.
+- Evolution data reflects the last 200 commits only. Older history is not
+  imported automatically.
+- Timestamps are from the git commit author date (`%ct`), not the commit date.
+- Commit message content is not stored — only counts and file paths.
+- Git analysis must be enabled in workspace settings for data to be populated.
 
 ## Installers
 
-- **NSIS:** `CodeCompass_0.2.0_x64-setup.exe`
-- **MSI:** `CodeCompass_0.2.0_x64_en-US.msi`
+- **NSIS:** `CodeCompass_0.3.0_x64-setup.exe`
+- **MSI:** `CodeCompass_0.3.0_x64_en-US.msi`
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 
@@ -81,6 +62,6 @@ All checks passed before building:
 - `npm run build` (frontend production build)
 - `cd src-tauri && cargo fmt --check`
 - `cd src-tauri && cargo clippy --all-targets -- -D warnings`
-- `cd src-tauri && cargo test` (102 Rust tests)
+- `cd src-tauri && cargo test` (105 Rust tests)
 - `cd src-tauri && cargo check`
 - `npm run check:versions`

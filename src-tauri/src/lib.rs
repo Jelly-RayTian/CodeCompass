@@ -63,6 +63,7 @@ pub fn run() {
             commands::git::get_workspace_settings,
             commands::git::update_workspace_settings,
             commands::git::get_co_change_hotspots,
+            commands::evolution::get_repository_evolution,
             commands::impact::get_call_graph,
             commands::impact::get_change_impact,
             commands::insights::get_workspace_insights,

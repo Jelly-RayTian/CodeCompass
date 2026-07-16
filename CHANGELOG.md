@@ -2,6 +2,42 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [0.3.0] — 2026-07-16
+
+### Git Evolution Dashboard
+
+- New **Evolution** page with commit timeline chart, file churn ranking, co-change
+  hotspots, and summary statistics.
+- Commit timeline bar chart aggregating commits and file changes by month.
+- Top-20 file churn table with proportional bar visualization.
+- Co-change hotspot cards showing frequently-changing file pairs.
+- Summary cards: total commits, unique files changed, total file changes,
+  most active month, date range.
+
+### Git data improvements
+
+- `git::recent_file_changes()` now returns real Unix timestamps (format `%H %ct`)
+  instead of zeros, and fetches up to 200 commits (increased from 50).
+- New `git::commit_log()` function returning `(hash, timestamp, message)` for
+  consumer use in future features.
+- `git_file_changes.timestamp` column now populated with real data.
+
+### New analysis module
+
+- `analysis::evolution` module: `build_evolution_report()` aggregates commit
+  timeline (monthly buckets), file churn rankings, and summary stats from
+  the `git_file_changes` table.
+- New `get_repository_evolution` Tauri command.
+
+### i18n
+
+- Full English and Chinese translations for the Evolution page.
+
+### Testing
+
+- 3 new Rust tests in `analysis::evolution`.
+- Rust test count: 102 → 105; frontend tests: 10; total: 115.
+
 ## [0.2.0] — 2026-07-16
 
 ### Repository Health Dashboard

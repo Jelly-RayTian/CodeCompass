@@ -17,6 +17,7 @@ export function Nav(): JSX.Element {
     { to: '/graph', label: t.nav.graph, icon: '\u{1F578}' },
     { to: '/insights', label: t.nav.insights, icon: '\u{1F4CA}' },
     { to: '/health', label: t.nav.health, icon: '\u{1F3E5}' },
+    { to: '/evolution', label: t.nav.evolution, icon: '\u{1F4C8}' },
     { to: '/settings', label: t.nav.settings, icon: '\u2699' },
   ];
 

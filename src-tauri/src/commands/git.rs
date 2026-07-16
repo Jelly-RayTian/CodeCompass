@@ -73,10 +73,9 @@ pub fn get_git_info(db: State<'_, Database>, workspace_id: i64) -> Result<GitInf
     let settings = get_settings(&db, workspace_id)?;
     if settings.git_analysis_enabled {
         let raw_changes = git::recent_file_changes(&root);
-        // We don't have per-commit timestamps easily, so use 0.
         let changes: Vec<(String, String, i64)> = raw_changes
             .iter()
-            .map(|(hash, path)| (hash.clone(), path.clone(), 0i64))
+            .map(|(hash, ts, path)| (hash.clone(), path.clone(), *ts))
             .collect();
         let _ = replace_git_changes(&db, workspace_id, &changes);
     }

@@ -120,6 +120,12 @@ export type {
   HealthSummary,
   RepositoryHealth,
 } from './health';
+export type {
+  RepositoryEvolution,
+  TimelinePoint,
+  FileChurn,
+  EvolutionSummary,
+} from './evolution';
 
 export interface ImportEntry {
   id: number;

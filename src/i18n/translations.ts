@@ -5,6 +5,7 @@ export const en = {
     graph: 'Dependency Graph',
     insights: 'Insights',
     health: 'Health',
+    evolution: 'Evolution',
     viewer: 'Viewer',
     settings: 'Settings',
   },
@@ -149,6 +150,29 @@ export const en = {
     limitation:
       'Risk scores approximate maintainability based on static signals (size, coupling, churn, diagnostics). They do not measure actual code quality, runtime behavior, or correctness. Use these metrics as investigation prompts, not as definitive assessments.',
   },
+  evolution: {
+    title: 'Git Evolution',
+    subtitle:
+      'Visualize how your repository has evolved over time through commit history. All analysis is local — no data leaves your machine.',
+    selectFolder: 'Select a folder…',
+    summary: 'Summary',
+    totalCommits: 'Total commits',
+    filesChanged: 'Files changed',
+    fileChanges: 'File changes',
+    mostActiveMonth: 'Most active month',
+    dateRange: 'Date range',
+    timeline: 'Commit Timeline',
+    noTimeline:
+      'No commit data available. Enable Git analysis in workspace settings and open this folder.',
+    fileChurn: 'File Churn',
+    noChurn: 'No churn data available.',
+    changes: 'Changes',
+    churnBar: 'Churn',
+    hotspots: 'Co-Change Hotspots',
+    noHotspots: 'No co-change data available.',
+    limitation:
+      'Evolution data reflects the last 200 commits only. Timestamps, file churn, and hotspots are derived from git log output. Commit message content is not stored. This is a local-first analysis — no repository data is uploaded.',
+  },
   settings: {
     title: 'Settings',
     subtitle: 'Application preferences and status.',
@@ -192,6 +216,7 @@ export const zh: typeof en = {
     graph: '依赖图',
     insights: '洞察',
     health: '健康',
+    evolution: '演化',
     viewer: '查看器',
     settings: '设置',
   },
@@ -331,6 +356,29 @@ export const zh: typeof en = {
     noData: '没有已分析的文件。请先对工作区运行"分析"。',
     limitation:
       '风险分基于静态信号（大小、耦合、变更频率、诊断）近似可维护性，不衡量实际代码质量、运行时行为或正确性。请将这些指标视为调查线索，而非确定性结论。',
+  },
+  evolution: {
+    title: 'Git 演化',
+    subtitle:
+      '通过提交历史可视化仓库随时间的演化。所有分析均在本地完成，数据不会离开你的机器。',
+    selectFolder: '选择一个文件夹…',
+    summary: '概览',
+    totalCommits: '总提交数',
+    filesChanged: '变更文件数',
+    fileChanges: '文件变更次数',
+    mostActiveMonth: '最活跃月份',
+    dateRange: '时间范围',
+    timeline: '提交时间线',
+    noTimeline:
+      '没有提交数据。请在工作区设置中启用 Git 分析并打开此文件夹。',
+    fileChurn: '文件变更频率',
+    noChurn: '没有变更频率数据。',
+    changes: '变更次数',
+    churnBar: '频率',
+    hotspots: '共同变更热点',
+    noHotspots: '没有共同变更数据。',
+    limitation:
+      '演化数据仅反映最近 200 次提交。时间戳、文件变更频率和热点来自 git log 输出。提交消息内容不会被存储。这是本地优先的分析，不会上传仓库数据。',
   },
   settings: {
     title: '设置',

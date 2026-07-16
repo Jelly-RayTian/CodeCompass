@@ -136,6 +136,22 @@
 - Evidence, limitations, and static-analysis caveats on every finding
 - Frontend API for call graph + impact queries
 
+## Milestone 11 — Git Evolution Dashboard
+
+**Status:** Complete
+
+- Evolution dashboard page with commit timeline, file churn, and co-change hotspots
+- Commit timeline bar chart (monthly buckets) from `git_file_changes`
+- Top-20 file churn ranking with proportional bars
+- Co-change hotspot cards
+- Summary statistics: total commits, files, changes, active month, date range
+- `git::recent_file_changes` fixed to return real timestamps (was always 0)
+- Commit depth increased from 50 to 200
+- New `git::commit_log` function for future use
+- New `analysis::evolution` module with `build_evolution_report`
+- English and Chinese i18n
+- 3 new Rust tests (105 total)
+
 ## Milestone 10 — Repository Health Dashboard
 
 **Status:** Complete
