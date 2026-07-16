@@ -104,7 +104,7 @@ pub fn generate_reading_path(
             for &neighbor_id in neighbors {
                 if visited.insert(neighbor_id) {
                     let (path, name) = file_info.get(&neighbor_id).cloned().unwrap_or_default();
-                    let new_reason = format!("imported by {}", &reason);
+                    let new_reason = format!("imported by {}", reason);
                     queue.push_back((neighbor_id, depth + 1, path.clone()));
                     result.push(ReadingPathItem {
                         order,
