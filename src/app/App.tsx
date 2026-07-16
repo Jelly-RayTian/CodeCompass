@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AppShell } from './AppShell';
 import { LanguageProvider } from '@/i18n/LanguageContext';
 import { Graph } from '@/pages/Graph';
+import { Health } from '@/pages/Health';
 import { Home } from '@/pages/Home';
 import { Insights } from '@/pages/Insights';
 import { Settings } from '@/pages/Settings';
@@ -24,6 +25,7 @@ export function App(): JSX.Element {
             <Route path="workspaces" element={<Workspaces />} />
             <Route path="graph" element={<Graph />} />
             <Route path="insights" element={<Insights />} />
+            <Route path="health" element={<Health />} />
             <Route path="viewer" element={<Viewer />} />
             <Route path="settings" element={<Settings />} />
           </Route>

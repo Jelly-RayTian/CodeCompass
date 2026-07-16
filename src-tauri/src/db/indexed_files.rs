@@ -201,6 +201,16 @@ pub fn get_file_details(db: &Database, file_id: i64) -> Result<Option<FileEntry>
     Ok(row)
 }
 
+/// Stores the source line count for a file after analysis.
+pub fn set_file_line_count(db: &Database, file_id: i64, line_count: i64) -> Result<(), AppError> {
+    let conn = db.lock()?;
+    conn.execute(
+        "UPDATE indexed_files SET line_count = ?1 WHERE id = ?2",
+        rusqlite::params![line_count, file_id],
+    )?;
+    Ok(())
+}
+
 /// Returns files ready for analysis (present, supported extension, pending or
 /// changed since last analysis). Each item is `(file_id, relative_path)`.
 pub fn get_files_for_analysis(

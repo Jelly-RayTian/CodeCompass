@@ -115,6 +115,11 @@ export type {
 } from './insights';
 export type { SourceFile } from './source';
 export type { SymbolEntry, SymbolSearchResult } from './symbols';
+export type {
+  FileHealth,
+  HealthSummary,
+  RepositoryHealth,
+} from './health';
 
 export interface ImportEntry {
   id: number;

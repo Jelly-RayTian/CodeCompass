@@ -131,7 +131,7 @@ continues.
 
 ## SQLite Schema
 
-Eight ordered, versioned migrations (`V1`–`V8`) embedded at compile time
+Eleven ordered, versioned migrations (`V1`–`V9`) embedded at compile time
 via `refinery::embed_migrations!` and run automatically on
 `Database::open`.
 

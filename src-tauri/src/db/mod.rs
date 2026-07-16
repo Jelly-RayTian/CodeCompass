@@ -98,5 +98,18 @@ mod tests {
             cols.contains(&"auto_reanalyze_enabled".to_string()),
             "auto_reanalyze_enabled column missing (V7), got: {cols:?}",
         );
+
+        // Verify V9: line_count on indexed_files
+        let file_cols: Vec<String> = conn
+            .prepare("PRAGMA table_info(indexed_files)")
+            .expect("pragma")
+            .query_map([], |row| row.get::<_, String>(1))
+            .expect("query")
+            .filter_map(|r| r.ok())
+            .collect();
+        assert!(
+            file_cols.contains(&"line_count".to_string()),
+            "line_count column missing (V9), got: {file_cols:?}",
+        );
     }
 }

@@ -28,6 +28,12 @@ convention: `V{n}__{name}.sql`.
 | `V2__indexed_folders_and_scan_runs.sql`       | Adds indexed-folder metadata columns, scan-run table, file metadata              |
 | `V3__file_fingerprints_and_present_state.sql` | Adds file fingerprints, present/deleted state, and change tracking               |
 | `V4__import_relationships.sql`                | Adds imports table, analysis_diagnostics table, analysis status on indexed_files |
+| `V5__symbols.sql`                              | Adds symbols table with source locations, parent hierarchy, visibility |
+| `V6__symbol_references.sql`                    | Adds symbol_references table for call-graph edges |
+| `V7__workspace_settings_and_git_tracking.sql` | Adds workspace settings flags and git_file_changes table |
+| `V8__scan_generation.sql`                      | Adds scan_generation column for safe deletion reconciliation |
+| `V9__line_count.sql`                           | Adds line_count column to indexed_files for complexity metrics |
+| `V9__line_count.sql`                           | Adds line_count column to indexed_files for complexity metrics |
 
 Migrations are applied automatically when `Database::open` is called (at
 application startup). Refinery tracks applied migrations in the

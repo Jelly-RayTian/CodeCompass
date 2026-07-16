@@ -136,6 +136,19 @@
 - Evidence, limitations, and static-analysis caveats on every finding
 - Frontend API for call graph + impact queries
 
+## Milestone 10 — Repository Health Dashboard
+
+**Status:** Complete
+
+- Health dashboard page with summary cards and risk distribution
+- Per-file composite risk score from size, line count, coupling, churn, diagnostics
+- Cycle-bonus risk adjustment for files in circular dependencies
+- Top-N risk files table and full sortable file list
+- V9 migration: line_count column on indexed_files
+- Line counting integrated into analysis runner
+- English and Chinese i18n
+- Rust tests for health report, risk scoring, cycle flagging
+
 ## Milestone 9 — Git Integration & Incremental Analysis
 
 **Status:** Complete

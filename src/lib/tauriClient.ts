@@ -14,6 +14,7 @@ import type {
   GitInfo,
   ImportEntry,
   IndexedFolder,
+  RepositoryHealth,
   ScanRun,
   ScanStatus,
   SourceFile,
@@ -207,6 +208,12 @@ export const tauriClient = {
 
   getCoChangeHotspots(workspaceId: number): Promise<CoChangePair[]> {
     return call<CoChangePair[]>('get_co_change_hotspots', {
+      workspaceId,
+    });
+  },
+
+  getRepositoryHealth(workspaceId: number): Promise<RepositoryHealth> {
+    return call<RepositoryHealth>('get_repository_health', {
       workspaceId,
     });
   },

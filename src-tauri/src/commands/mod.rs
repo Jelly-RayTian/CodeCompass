@@ -3,6 +3,7 @@ pub mod application;
 pub mod database;
 pub mod git;
 pub mod graph;
+pub mod health;
 pub mod impact;
 pub mod insights;
 pub mod source;

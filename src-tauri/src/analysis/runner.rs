@@ -11,6 +11,7 @@ use crate::db::analysis::{clear_workspace_diagnostics, upsert_file_diagnostics};
 use crate::db::imports::{clear_workspace_imports, replace_file_imports};
 use crate::db::indexed_files::{
     get_files_for_analysis, mark_file_analysis_done, mark_file_parse_error, mark_pending_analysis,
+    set_file_line_count,
 };
 use crate::db::indexed_folders::update_folder_analysis_status;
 use crate::db::references::{clear_workspace_references, replace_file_references};
@@ -102,6 +103,9 @@ pub fn run_analysis(
                 continue;
             }
         };
+
+        let line_count = source.lines().count() as i64;
+        let _ = set_file_line_count(db, *file_id, line_count);
 
         let (result, success) = analyzer.parse(*file_id, &absolute_path, root_path, &source);
 

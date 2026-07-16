@@ -2,6 +2,44 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [0.2.0] — 2026-07-16
+
+### Repository Health Dashboard
+
+- New **Health** page with summary cards (total files, analyzed files, internal
+  imports, symbols, cycle count, average risk score) and risk distribution badges.
+- Per-file risk score (0–100) computed from five weighted signals: file size,
+  line count (complexity proxy), import degree (coupling), git change churn, and
+  parse diagnostics. Category labels: low / medium / high / critical.
+- Cycle detection integrated into health report — files in circular dependencies
+  receive a 15% risk boost with an explicit `is_in_cycle` flag.
+- Top-20 risk files table and full sortable file list with columns for risk bar,
+  lines, imports, symbols, churn, and cycle participation.
+- New `get_repository_health` Tauri command (`analysis::health`) that aggregates
+  data from `indexed_files`, `imports`, `symbols`, `analysis_diagnostics`, and
+  `git_file_changes` into a single structured report.
+- Limitations callout on every page explaining that risk scores are heuristics,
+  not quality judgments.
+
+### Line counting
+
+- V9 database migration: adds `line_count INTEGER DEFAULT 0` to `indexed_files`.
+- Analysis runner now counts source lines after reading each file and persists
+  the count via `set_file_line_count`, enabling complexity approximation without
+  a full cyclomatic-complexity scanner.
+
+### i18n
+
+- Full English and Chinese translations for the Health page (nav, titles,
+  subtitles, cards, table headers, limitation text).
+
+### Testing
+
+- 4 new Rust tests in `analysis::health` covering empty report, risk scoring,
+  cycle flagging, and risk score range.
+- V9 migration verified in `db::tests::migration_creates_all_tables`.
+- Rust test count: 98 → 102; frontend tests: 10; total: 112.
+
 ## [0.1.1] — 2026-07-07
 
 ### Stability & bug fixes

@@ -57,6 +57,7 @@ pub fn run() {
             commands::application::get_application_info,
             commands::database::get_database_status,
             commands::graph::get_dependency_graph,
+            commands::health::get_repository_health,
             commands::git::get_git_info,
             commands::git::get_file_git_info,
             commands::git::get_workspace_settings,
