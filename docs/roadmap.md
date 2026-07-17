@@ -136,6 +136,18 @@
 - Evidence, limitations, and static-analysis caveats on every finding
 - Frontend API for call graph + impact queries
 
+## Milestone 13 — Performance Optimization
+
+**Status:** Complete
+
+- **Incremental analysis**: removed workspace-level clearing + blanket `mark_pending_analysis`
+- Files unchanged after rescan skip analysis entirely
+- **Analyze speedup**: 8.5× at 5,000 files (24.1s → 2.8s), 16.7× at 1,000 files
+- Scanner batch size 100 → 500 (5× fewer SQLite transactions)
+- SQLite `PRAGMA synchronous=NORMAL` + 8 MB page cache
+- Progress interval 10 → 50 files (reduced IPC overhead)
+- Updated benchmarks with before/after comparison
+
 ## Milestone 12 — Plugin Architecture
 
 **Status:** Complete

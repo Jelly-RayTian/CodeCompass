@@ -17,8 +17,8 @@ use crate::error::AppError;
 use crate::models::ScanProgressEvent;
 use crate::platform::{normalize_existing_path, path_is_inside_or_equal};
 
-const BATCH_SIZE: usize = 100;
-const PROGRESS_INTERVAL: usize = 10;
+const BATCH_SIZE: usize = 500;
+const PROGRESS_INTERVAL: usize = 50;
 
 /// Directories skipped during repository scanning.
 const IGNORED_DIRECTORIES: &[&str] = &[

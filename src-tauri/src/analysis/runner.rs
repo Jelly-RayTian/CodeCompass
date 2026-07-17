@@ -6,14 +6,14 @@ use tauri::{AppHandle, Emitter};
 use crate::analysis::plugin::build_registry;
 use crate::analysis::references::extract_references;
 use crate::analysis::symbols::extract_symbols;
-use crate::db::analysis::{clear_workspace_diagnostics, upsert_file_diagnostics};
-use crate::db::imports::{clear_workspace_imports, replace_file_imports};
+use crate::db::analysis::upsert_file_diagnostics;
+use crate::db::imports::replace_file_imports;
 use crate::db::indexed_files::{
-    mark_file_analysis_done, mark_file_parse_error, mark_pending_analysis, set_file_line_count,
+    mark_file_analysis_done, mark_file_parse_error, set_file_line_count,
 };
 use crate::db::indexed_folders::update_folder_analysis_status;
-use crate::db::references::{clear_workspace_references, replace_file_references};
-use crate::db::symbols::{clear_workspace_symbols, replace_file_symbols};
+use crate::db::references::replace_file_references;
+use crate::db::symbols::replace_file_symbols;
 use crate::db::Database;
 use crate::error::AppError;
 use crate::models::AnalysisProgressEvent;
@@ -38,12 +38,6 @@ pub fn run_analysis(
 ) -> Result<(), AppError> {
     let registry = build_registry();
     let now = now_epoch_secs();
-
-    clear_workspace_imports(db, workspace_id)?;
-    clear_workspace_diagnostics(db, workspace_id)?;
-    clear_workspace_symbols(db, workspace_id)?;
-    clear_workspace_references(db, workspace_id)?;
-    mark_pending_analysis(db, workspace_id)?;
 
     let files = get_files_for_analysis(db, workspace_id)?;
     let total = files.len() as i64;

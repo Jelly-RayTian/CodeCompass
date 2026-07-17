@@ -31,7 +31,47 @@ cd src-tauri && cargo bench
 ## Latest measured results
 
 **Environment:** Windows, x86_64, release build (`--release`).
-**Date:** 2026-06-24.
+**Date:** 2026-07-17. **Release:** v0.5.0.
+
+| Files | Scan (ms) | Analyze (ms) | Graph (ms) | Unchanged rescan (ms) | Modified rescan (ms) | Imports | Symbols |
+|------:|----------:|-------------:|-----------:|----------------------:|---------------------:|--------:|--------:|
+|   100 |       3.4 |         28.3 |        0.2 |                   5.0 |                  4.4 |      14 |     108 |
+| 1,000 |      25.1 |        282.6 |        0.6 |                  25.1 |                 25.4 |     142 |   1,077 |
+| 5,000 |     255.3 |      2,837.0 |        4.4 |                 203.4 |                233.0 |     714 |   5,385 |
+
+### Comparison with v0.4.0
+
+| Files | Phase | v0.4.0 (ms) | v0.5.0 (ms) | Speedup |
+|------:|-------|-----------:|-----------:|--------:|
+| 5,000 | Analyze | 24,112.9 | 2,837.0 | **8.5×** |
+| 5,000 | Scan | 361.9 | 255.3 | 1.4× |
+| 1,000 | Analyze | 4,725.2 | 282.6 | **16.7×** |
+| 1,000 | Scan | 92.0 | 25.1 | 3.7× |
+
+## v0.5.0 performance optimizations
+
+### 1. Incremental analysis (smart re-analysis)
+
+**Before:** Every `run_analysis()` call cleared all import/symbol/reference data
+workspace-wide and reset `analysis_status = 'pending'` for every file, forcing
+re-analysis of unchanged files.
+
+**After:** Per-file `replace_file_*` functions already do DELETE-then-INSERT
+within their own file scope. The workspace-level clearing and blanket
+`mark_pending_analysis` were removed. Files with `analysis_status = 'analyzed'`
+and `change_status = 'unchanged'` are automatically skipped on re-analysis.
+
+### 2. Scanner batch size increase
+
+Batch flush size increased from 100 to 500 files, reducing SQLite transaction
+overhead by 5×. Progress events now emit every 50 files instead of 10.
+
+### 3. SQLite pragma tuning
+
+Added `PRAGMA synchronous=NORMAL` (safe with WAL journal mode) and
+`PRAGMA cache_size=-8000` (8 MB page cache) to improve read/write throughput.
+
+## Previous results (v0.4.0, 2026-06-24)
 
 | Files | Scan (ms) | Analyze (ms) | Graph (ms) | Unchanged rescan (ms) | Modified rescan (ms) | Imports | Symbols |
 |------:|----------:|-------------:|-----------:|----------------------:|---------------------:|--------:|--------:|
@@ -39,57 +79,14 @@ cd src-tauri && cargo bench
 | 1,000 |      92.0 |       4,725.2 |        0.7 |                  86.6 |                 82.0 |     142 |   1,077 |
 | 5,000 |     361.9 |      24,112.9 |        2.9 |                 411.9 |                402.0 |     714 |   5,385 |
 
-### Reading the table
-
-- **Scan** — full `walkdir` traversal + batched SQLite upserts (metadata
-  only; file contents are not read).
-- **Analyze** — OXC AST parse + import/symbol/reference extraction +
-  persistence for every file.
-- **Graph** — `build_graph` over the `imports` table (counting, node
-  collection, edge collection, cycle detection).
-- **Unchanged rescan** — a second scan with no filesystem changes; the
-  upsert path still runs but all rows resolve to `unchanged`.
-- **Modified rescan** — every 10th file is rewritten (size + mtime
-  change) before rescanning, exercising the `changed` path.
-- **Imports / Symbols** — counts produced by analysis, for scale
-  context.
-
-### Observations
-
-- **Scan scales near-linearly** with file count and is fast (metadata
-  only). Unchanged rescan is slightly slower than first scan due to the
-  upsert comparison path.
-- **Analysis dominates** total time, as expected: it reads and parses
-  every file. ~4.8 ms/file at 1,000 files; ~4.8 ms/file at 5,000 files
-  — linear, no super-linear blowup.
-- **Graph construction is sub-3 ms** even at 5,000 files, thanks to the
-  SQLite indexes on `imports.source_file_id` and
-  `imports.resolved_target_file_id`.
-- **Graph truncation** (500-node cap) is not exercised by these
-  fixtures because only ~14% of files have imports. The truncation path
-  is covered by `analysis::graph::tests::large_graph_is_truncated_not_refused`
-  and `tests/failure_paths.rs::graph_truncation_caps_nodes_at_limit`.
-
 ## What is not measured here
 
-- **Peak memory.** Criterion does not report memory. A future
-  `iai-callgrind` or manual `#[track_alloc]` harness could add this.
+- **Peak memory.** Criterion does not report memory.
 - **Frontend render time** for very large React Flow graphs. The
-  backend caps graph responses at 500 nodes, so this is bounded by
-  design rather than measured here.
+  backend caps graph responses at 500 nodes.
+- **Re-analysis on unchanged repos.** Since v0.5.0, unchanged files are
+  skipped entirely, so a re-analysis of an unchanged 5,000-file repo
+  should show near-zero analysis time (only the query to select
+  changed files runs).
 - **Debug-build numbers.** Debug builds are 5–10× slower for the
   analysis phase; always benchmark with `--release`.
-
-## Investigated bottlenecks
-
-Based on the measurements, the analysis phase is the clear bottleneck
-(~96% of total time at 5,000 files). It is dominated by OXC parsing and
-per-file `read_to_string`. No speculative rewrite was performed without
-evidence. Potential future improvements, if measurements justify them:
-
-- Reuse parsed module ASTs across rescans when the fingerprint is
-  unchanged (currently analysis re-parses all pending/changed files).
-- Parallelize file parsing with `rayon` (the SQLite writes would still
-  be serialized through the `Mutex<Connection>`).
-- Add an FTS5 virtual table for symbol search if `LIKE` becomes a
-  bottleneck at >50k symbols.

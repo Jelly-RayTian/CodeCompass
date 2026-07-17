@@ -1,74 +1,51 @@
-# CodeCompass v0.4.0 Release Notes
+# CodeCompass v0.5.0 Release Notes
 
-**Release date:** 2026-07-16  
+**Release date:** 2026-07-17  
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v0.4.0 introduces a **lightweight plugin API** for extending CodeCompass with
-new language analyzers without modifying core code. A CSS analyzer is included
-as a reference example, demonstrating the full plugin lifecycle from registration
-to import extraction.
+v0.5.0 is a **performance release** focused on large-repository throughput.
+All optimizations are data-driven, based on benchmarks in
+[docs/benchmarks.md](./docs/benchmarks.md).
 
 ## Highlights
 
-### AnalyzerRegistry
+### Measured speed improvements (release build, 5,000 files)
 
-- New `AnalyzerRegistry` maps file extensions to `LanguageAnalyzer` implementations.
-- Both the **scanner** (file discovery) and the **analysis runner** (dispatch)
-  consult the registry — adding a new analyzer automatically includes its
-  files in scanning and analysis.
-- SQL queries for file selection are built dynamically from registered extensions.
+| Phase | Before (v0.4.0) | After (v0.5.0) | Speedup |
+|-------|----------------:|---------------:|--------:|
+| Analyze | 24.1 seconds | 2.8 seconds | **8.5×** |
+| Scan | 362 ms | 255 ms | 1.4× |
 
-### Enhanced LanguageAnalyzer trait
+At 1,000 files: Analyze is **16.7× faster** (4.7s → 0.28s).
 
-Every analyzer now exposes metadata:
-- `name()` — human-readable plugin name
-- `version()` — semantic version
-- `description()` — what the analyzer extracts
+### What changed
 
-### CSS analyzer (reference plugin)
+1. **Incremental analysis.** Removed workspace-level clearing of imports,
+   symbols, and references at the start of each analysis run. Per-file
+   replace functions already handle their own clearing. Files that are
+   unchanged after a rescan now skip analysis entirely — only new and
+   changed files are re-parsed.
 
-A complete, minimal example of how to add a new language:
-- Handles `.css` files
-- Extracts `@import "file.css"`, `@import url(...)`, and single-quoted variants
-- Strips query parameters (`file.css?v=2` → `file.css`)
-- 7 unit tests
+2. **Larger scanner batches.** Batch flush size increased from 100 to 500
+   files, reducing SQLite transaction overhead by 5×. Progress events
+   emit every 50 files instead of 10.
 
-### Plugin info command
+3. **SQLite pragma tuning.** `PRAGMA synchronous=NORMAL` + 8 MB page cache
+   (`cache_size=-8000`) — safe with WAL journal mode already enabled.
 
-New `get_plugin_info` Tauri command exposes registered plugins to the frontend.
+### Benchmark methodology
 
-### Architecture documentation
-
-New `docs/plugin-architecture.md` with a step-by-step guide (3 steps) for
-adding a new language analyzer.
-
-## Plugin architecture
-
-```
-Register in build_registry()
-         │
-    ┌────▼────┐
-    │Registry │ extension → Arc<dyn LanguageAnalyzer>
-    └─┬────┬──┘
-      │    │
-  Scanner  Runner
-```
-
-## Known limitations
-
-- **Compile-time only.** Plugins are statically linked — no runtime `dlopen`
-  or dynamic loading. New analyzers require rebuilding the binary.
-- CSS analyzer does not extract symbols or references — only imports.
-- Extensions are limited to those known at compile time.
+All optimizations were verified by the existing reproducible benchmark
+harness (`cargo run --release --example bench_summary`). The benchmark
+generates synthetic TypeScript projects at runtime (100, 1,000, 5,000 files)
+and measures scan, analysis, graph construction, and rescan performance.
 
 ## Installers
 
-- **NSIS:** `CodeCompass_0.4.0_x64-setup.exe`
-- **MSI:** `CodeCompass_0.4.0_x64_en-US.msi`
-
-> Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
+- **NSIS:** `CodeCompass_0.5.0_x64-setup.exe`
+- **MSI:** `CodeCompass_0.5.0_x64_en-US.msi`
 
 ## Verification
 
@@ -83,3 +60,4 @@ All checks passed before building:
 - `cd src-tauri && cargo test` (117 Rust tests)
 - `cd src-tauri && cargo check`
 - `npm run check:versions`
+- `cd src-tauri && cargo run --release --example bench_summary`

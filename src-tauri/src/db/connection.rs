@@ -23,7 +23,12 @@ impl Database {
     /// pending refinery migrations.
     pub fn open(path: &Path) -> Result<Self, AppError> {
         let mut conn = Connection::open(path)?;
-        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;")?;
+        conn.execute_batch(
+            "PRAGMA journal_mode=WAL; \
+             PRAGMA foreign_keys=ON; \
+             PRAGMA synchronous=NORMAL; \
+             PRAGMA cache_size=-8000;",
+        )?;
         migrations::runner().run(&mut conn)?;
         Ok(Self {
             path: path.to_string_lossy().to_string(),

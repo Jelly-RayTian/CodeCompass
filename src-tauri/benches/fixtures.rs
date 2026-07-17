@@ -15,9 +15,7 @@ use std::path::PathBuf;
 use codecompass_lib::analysis::LanguageAnalyzer;
 use codecompass_lib::analysis::TypeScriptJavaScriptAnalyzer;
 use codecompass_lib::db::imports::replace_file_imports;
-use codecompass_lib::db::indexed_files::{
-    get_files_for_analysis, mark_file_analysis_done, mark_pending_analysis,
-};
+use codecompass_lib::db::indexed_files::{get_files_for_analysis, mark_file_analysis_done};
 use codecompass_lib::db::indexed_folders::insert_indexed_folder;
 use codecompass_lib::db::references::replace_file_references;
 use codecompass_lib::db::scan_runs::create_scan_run;
@@ -107,7 +105,6 @@ pub fn bench_scan(fx: &Fixture) -> u128 {
 pub fn bench_analyze(fx: &Fixture) -> u128 {
     let analyzer = TypeScriptJavaScriptAnalyzer;
     let now = 1000i64;
-    mark_pending_analysis(&fx.db, fx.workspace_id).expect("pending");
     let files = get_files_for_analysis(&fx.db, fx.workspace_id).expect("files");
     let start = std::time::Instant::now();
     for (file_id, relative_path) in &files {

@@ -2,6 +2,44 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [0.5.0] — 2026-07-17
+
+### Performance (measured, release build)
+
+| Phase | 5,000 files (v0.4.0) | 5,000 files (v0.5.0) | Speedup |
+|-------|--------------------:|--------------------:|--------:|
+| Analyze | 24,112.9 ms | 2,837.0 ms | **8.5×** |
+| Scan | 361.9 ms | 255.3 ms | 1.4× |
+| Graph | 2.9 ms | 4.4 ms | — |
+
+At 1,000 files: Analyze 16.7× faster, Scan 3.7× faster.
+
+### Incremental analysis
+
+- Removed workspace-level clearing of imports/symbols/references/diagnostics
+  and blanket `mark_pending_analysis` call at the start of every analysis run.
+- `replace_file_*` functions already perform per-file DELETE-then-INSERT, so
+  workspace-wide clearing was redundant and forced re-analysis of all files.
+- Files that are unchanged after a rescan now skip analysis entirely.
+
+### Scanner optimization
+
+- Batch flush size increased from 100 to 500 files, reducing SQLite transaction
+  overhead by 5×.
+- Progress events emit every 50 files (was 10) to reduce IPC overhead on large
+  repositories.
+
+### SQLite pragma tuning
+
+- Added `PRAGMA synchronous=NORMAL` (safe with WAL mode) and
+  `PRAGMA cache_size=-8000` (8 MB page cache) for better write/read
+  throughput.
+
+### Benchmarks
+
+- Updated `docs/benchmarks.md` with before/after comparison table and
+  optimization descriptions.
+
 ## [0.4.0] — 2026-07-16
 
 ### Plugin system
