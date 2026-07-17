@@ -1,54 +1,72 @@
-# CodeCompass v0.3.0 Release Notes
+# CodeCompass v0.4.0 Release Notes
 
 **Release date:** 2026-07-16  
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v0.3.0 introduces the **Git Evolution** dashboard — visualize how your repository
-has changed over time through commit history, file churn, and co-change hotspots.
-All analysis is local-first; no repository data is ever uploaded.
+v0.4.0 introduces a **lightweight plugin API** for extending CodeCompass with
+new language analyzers without modifying core code. A CSS analyzer is included
+as a reference example, demonstrating the full plugin lifecycle from registration
+to import extraction.
 
 ## Highlights
 
-### Git Evolution Dashboard
+### AnalyzerRegistry
 
-- **Commit Timeline** chart showing commits and file changes per month as a bar
-  chart, giving an at-a-glance view of development activity over time.
-- **File Churn** ranking showing the 20 most frequently changed files, with
-  visual proportional bars.
-- **Co-Change Hotspots** listing file pairs that changed together most often.
-- **Summary cards** with total commits, unique files changed, total file changes,
-  most active month, and date range of tracked history.
+- New `AnalyzerRegistry` maps file extensions to `LanguageAnalyzer` implementations.
+- Both the **scanner** (file discovery) and the **analysis runner** (dispatch)
+  consult the registry — adding a new analyzer automatically includes its
+  files in scanning and analysis.
+- SQL queries for file selection are built dynamically from registered extensions.
 
-### Git data improvements
+### Enhanced LanguageAnalyzer trait
 
-- `git_file_changes.timestamp` now stores real Unix timestamps from git log
-  (previously always 0), enabling time-based aggregation.
-- Commit depth increased from 50 to 200 commits with a 1000-file cap.
-- New `git::commit_log()` infrastructure for future commit-level features.
+Every analyzer now exposes metadata:
+- `name()` — human-readable plugin name
+- `version()` — semantic version
+- `description()` — what the analyzer extracts
 
-### Data sources
+### CSS analyzer (reference plugin)
 
-| Feature          | Source                     |
-|------------------|----------------------------|
-| Commit timeline  | `git_file_changes` (month buckets) |
-| File churn       | `git_file_changes` (group by path) |
-| Co-change pairs  | `git_file_changes` (self-join)     |
-| Summary stats    | `git_file_changes` (aggregates)    |
+A complete, minimal example of how to add a new language:
+- Handles `.css` files
+- Extracts `@import "file.css"`, `@import url(...)`, and single-quoted variants
+- Strips query parameters (`file.css?v=2` → `file.css`)
+- 7 unit tests
+
+### Plugin info command
+
+New `get_plugin_info` Tauri command exposes registered plugins to the frontend.
+
+### Architecture documentation
+
+New `docs/plugin-architecture.md` with a step-by-step guide (3 steps) for
+adding a new language analyzer.
+
+## Plugin architecture
+
+```
+Register in build_registry()
+         │
+    ┌────▼────┐
+    │Registry │ extension → Arc<dyn LanguageAnalyzer>
+    └─┬────┬──┘
+      │    │
+  Scanner  Runner
+```
 
 ## Known limitations
 
-- Evolution data reflects the last 200 commits only. Older history is not
-  imported automatically.
-- Timestamps are from the git commit author date (`%ct`), not the commit date.
-- Commit message content is not stored — only counts and file paths.
-- Git analysis must be enabled in workspace settings for data to be populated.
+- **Compile-time only.** Plugins are statically linked — no runtime `dlopen`
+  or dynamic loading. New analyzers require rebuilding the binary.
+- CSS analyzer does not extract symbols or references — only imports.
+- Extensions are limited to those known at compile time.
 
 ## Installers
 
-- **NSIS:** `CodeCompass_0.3.0_x64-setup.exe`
-- **MSI:** `CodeCompass_0.3.0_x64_en-US.msi`
+- **NSIS:** `CodeCompass_0.4.0_x64-setup.exe`
+- **MSI:** `CodeCompass_0.4.0_x64_en-US.msi`
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 
@@ -62,6 +80,6 @@ All checks passed before building:
 - `npm run build` (frontend production build)
 - `cd src-tauri && cargo fmt --check`
 - `cd src-tauri && cargo clippy --all-targets -- -D warnings`
-- `cd src-tauri && cargo test` (105 Rust tests)
+- `cd src-tauri && cargo test` (117 Rust tests)
 - `cd src-tauri && cargo check`
 - `npm run check:versions`

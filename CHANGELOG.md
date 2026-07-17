@@ -2,6 +2,35 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [0.4.0] — 2026-07-16
+
+### Plugin system
+
+- New `LanguageAnalyzer` trait with metadata: `name()`, `version()`, `description()`.
+- **AnalyzerRegistry** (`analysis::plugin`) maps file extensions to analyzers
+  via `Arc<dyn LanguageAnalyzer>`. Built once at startup; consulted by both
+  the scanner (file discovery) and the analysis runner (dispatch).
+- **CSS analyzer** (`analysis::css_analyzer`) as a reference example plugin:
+  extracts `@import` and `@import url(...)` statements from `.css` files.
+  7 unit tests covering double-quoted, single-quoted, `url()`, multiple imports,
+  empty input, and query-string stripping.
+- Scanner now uses the registry for extension filtering; no more hardcoded
+  extension list in the scanner loop.
+- Analysis runner builds its SQL `WHERE extension IN (...)` clause dynamically
+  from the registry and dispatches each file to the correct analyzer.
+- New `get_plugin_info` Tauri command returns registered plugin metadata
+  (name, version, description, extensions).
+- Plugin architecture documented in `docs/plugin-architecture.md` with a
+  step-by-step guide for adding new language analyzers without touching
+  core code.
+
+### Testing
+
+- 5 new Rust tests in `analysis::plugin` covering registry construction,
+  extension resolution, unknown extensions, and plugin metadata.
+- 7 new Rust tests in `analysis::css_analyzer`.
+- Test count: 105 → 117; frontend: 10; total: 127.
+
 ## [0.3.0] — 2026-07-16
 
 ### Git Evolution Dashboard

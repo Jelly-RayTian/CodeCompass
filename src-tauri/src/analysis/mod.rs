@@ -1,10 +1,12 @@
 pub mod call_graph;
+pub mod css_analyzer;
 pub mod entrypoint;
 pub mod evolution;
 pub mod findings;
 pub mod graph;
 pub mod health;
 pub mod impact;
+pub mod plugin;
 pub mod reading_path;
 pub mod references;
 pub mod resolver;
@@ -19,8 +21,23 @@ pub use ts_js::{parse_file as parse_ts_js_file, ImportRecord, ParseDiagnostic, P
 ///
 /// Implementations parse source files and produce import records,
 /// diagnostics, and any language-specific metadata.
+///
+/// ## Plugin system
+///
+/// New language analyzers implement this trait and register in
+/// [`plugin::build_registry`]. See [`css_analyzer::CssAnalyzer`] for
+/// a complete example.
 #[allow(dead_code)]
 pub trait LanguageAnalyzer: Send + Sync {
+    /// Human-readable plugin name, e.g. "TypeScript/JavaScript".
+    fn name(&self) -> &str;
+
+    /// Semantic version of the analyzer plugin.
+    fn version(&self) -> &str;
+
+    /// Short description of what the analyzer extracts.
+    fn description(&self) -> &str;
+
     /// Returns the file extensions this analyzer handles (e.g. `["ts",
     /// "tsx", "js", "jsx"]`).
     fn supported_extensions(&self) -> &'static [&'static str];
@@ -44,6 +61,18 @@ pub trait LanguageAnalyzer: Send + Sync {
 pub struct TypeScriptJavaScriptAnalyzer;
 
 impl LanguageAnalyzer for TypeScriptJavaScriptAnalyzer {
+    fn name(&self) -> &str {
+        "TypeScript/JavaScript"
+    }
+
+    fn version(&self) -> &str {
+        "0.1.0"
+    }
+
+    fn description(&self) -> &str {
+        "OXC-based AST parser for TypeScript and JavaScript. Extracts imports, exports, symbols, and references."
+    }
+
     fn supported_extensions(&self) -> &'static [&'static str] {
         &["ts", "tsx", "js", "jsx"]
     }

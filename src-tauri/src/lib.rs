@@ -67,6 +67,7 @@ pub fn run() {
             commands::impact::get_call_graph,
             commands::impact::get_change_impact,
             commands::insights::get_workspace_insights,
+            commands::plugin::get_plugin_info,
             commands::source::read_source_file,
             commands::symbols::search_symbols_command,
             commands::symbols::get_file_outline_command,

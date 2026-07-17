@@ -6,9 +6,9 @@ use std::sync::Arc;
 use tauri::Emitter;
 use walkdir::WalkDir;
 
+use crate::analysis::plugin::build_registry;
 use crate::db::indexed_files::{
-    is_supported_extension, mark_removed_files_by_generation, next_scan_generation,
-    upsert_files_batch, FileUpsert,
+    mark_removed_files_by_generation, next_scan_generation, upsert_files_batch, FileUpsert,
 };
 use crate::db::indexed_folders::update_folder_scan_status;
 use crate::db::scan_runs::{finish_scan_run, start_scan_run, update_scan_progress};
@@ -155,6 +155,7 @@ pub fn scan_workspace(
     let mut batch: Vec<FileUpsert> = Vec::with_capacity(BATCH_SIZE);
     let mut progress_counter: usize = 0;
 
+    let registry = build_registry();
     let ignored: HashSet<&str> = IGNORED_DIRECTORIES.iter().copied().collect();
     let mut walker = WalkDir::new(&root)
         .follow_links(false)
@@ -238,11 +239,15 @@ pub fn scan_workspace(
             .extension()
             .map(|s| s.to_string_lossy().to_string().to_lowercase());
 
-        if !is_supported_extension(extension.as_deref()) {
+        if extension.is_none() {
+            continue;
+        }
+        let ext = extension.unwrap();
+        if registry.resolve(&ext).is_none() {
             continue;
         }
 
-        match build_file_row(entry_path, &relative_path, extension) {
+        match build_file_row(entry_path, &relative_path, Some(ext)) {
             Ok(row) => {
                 batch.push(row);
                 files_indexed += 1;

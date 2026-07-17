@@ -7,6 +7,7 @@ pub mod graph;
 pub mod health;
 pub mod impact;
 pub mod insights;
+pub mod plugin;
 pub mod source;
 pub mod symbols;
 pub mod workspaces;

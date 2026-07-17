@@ -3,15 +3,13 @@ use std::sync::Arc;
 
 use tauri::{AppHandle, Emitter};
 
+use crate::analysis::plugin::build_registry;
 use crate::analysis::references::extract_references;
 use crate::analysis::symbols::extract_symbols;
-use crate::analysis::LanguageAnalyzer;
-use crate::analysis::TypeScriptJavaScriptAnalyzer;
 use crate::db::analysis::{clear_workspace_diagnostics, upsert_file_diagnostics};
 use crate::db::imports::{clear_workspace_imports, replace_file_imports};
 use crate::db::indexed_files::{
-    get_files_for_analysis, mark_file_analysis_done, mark_file_parse_error, mark_pending_analysis,
-    set_file_line_count,
+    mark_file_analysis_done, mark_file_parse_error, mark_pending_analysis, set_file_line_count,
 };
 use crate::db::indexed_folders::update_folder_analysis_status;
 use crate::db::references::{clear_workspace_references, replace_file_references};
@@ -29,11 +27,8 @@ fn now_epoch_secs() -> i64 {
 
 /// Runs analysis for a workspace.
 ///
-/// * `db` — database handle.
-/// * `workspace_id` — the workspace to analyse.
-/// * `root_path` — the workspace root directory.
-/// * `cancel` — cancellation token.
-/// * `app` — for emitting progress events.
+/// Uses the plugin registry to dispatch each file to the correct
+/// language analyzer based on its extension.
 pub fn run_analysis(
     db: &Database,
     workspace_id: i64,
@@ -41,10 +36,9 @@ pub fn run_analysis(
     cancel: Arc<AtomicBool>,
     app: &AppHandle,
 ) -> Result<(), AppError> {
-    let analyzer = TypeScriptJavaScriptAnalyzer;
+    let registry = build_registry();
     let now = now_epoch_secs();
 
-    // Clear previous analysis results.
     clear_workspace_imports(db, workspace_id)?;
     clear_workspace_diagnostics(db, workspace_id)?;
     clear_workspace_symbols(db, workspace_id)?;
@@ -107,14 +101,24 @@ pub fn run_analysis(
         let line_count = source.lines().count() as i64;
         let _ = set_file_line_count(db, *file_id, line_count);
 
-        let (result, success) = analyzer.parse(*file_id, &absolute_path, root_path, &source);
+        // Resolve the right analyzer for this file's extension.
+        let ext = absolute_path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("");
+        let analyzer = registry.resolve(ext);
+        let (result, success) = if let Some(a) = analyzer {
+            a.parse(*file_id, &absolute_path, root_path, &source)
+        } else {
+            mark_file_parse_error(db, *file_id, &now, "no analyzer for extension")?;
+            error_count += 1;
+            continue;
+        };
 
         if success {
             replace_file_imports(db, *file_id, &result.imports, now)?;
-            // Extract symbols from the same source.
             let symbols = extract_symbols(&source, &absolute_path);
             replace_file_symbols(db, *file_id, workspace_id, &symbols, now)?;
-            // Extract symbol-level references (calls).
             let refs = extract_references(&source, &absolute_path);
             replace_file_references(db, *file_id, workspace_id, &refs, now)?;
             parsed += 1;
@@ -171,4 +175,46 @@ pub fn run_analysis(
 
 fn emit_progress(app: &AppHandle, event: AnalysisProgressEvent) {
     let _ = app.emit("analysis:progress", event);
+}
+
+/// Fetches files for analysis, filtered to extensions known to the plugin
+/// registry. Builds the SQL `IN (...)` clause dynamically from registered
+/// extensions so that adding a new analyzer automatically includes its
+/// files without query changes.
+fn get_files_for_analysis(
+    db: &Database,
+    workspace_id: i64,
+) -> Result<Vec<(i64, String)>, AppError> {
+    let registry = build_registry();
+    let extensions: Vec<String> = registry.all_extensions();
+    if extensions.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let conn = db.lock()?;
+    let placeholders: Vec<String> = extensions
+        .iter()
+        .enumerate()
+        .map(|(i, _)| format!("?{}", i + 3))
+        .collect();
+    let sql = format!(
+        "SELECT id, relative_path FROM indexed_files \
+         WHERE workspace_id = ?1 AND is_present = 1 \
+         AND (analysis_status = 'pending' OR change_status IN ('new', 'changed')) \
+         AND extension IN ({})",
+        placeholders.join(", ")
+    );
+
+    let mut stmt = conn.prepare(&sql)?;
+    let mut params: Vec<Box<dyn rusqlite::types::ToSql>> = Vec::new();
+    params.push(Box::new(workspace_id));
+    params.push(Box::new(1i64));
+    for ext in &extensions {
+        params.push(Box::new(ext.clone()));
+    }
+    let refs: Vec<&dyn rusqlite::types::ToSql> = params.iter().map(|p| p.as_ref()).collect();
+
+    let rows = stmt.query_map(refs.as_slice(), |row| Ok((row.get(0)?, row.get(1)?)))?;
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(AppError::Database)
 }

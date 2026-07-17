@@ -136,6 +136,19 @@
 - Evidence, limitations, and static-analysis caveats on every finding
 - Frontend API for call graph + impact queries
 
+## Milestone 12 — Plugin Architecture
+
+**Status:** Complete
+
+- Enhanced `LanguageAnalyzer` trait with `name()`, `version()`, `description()` metadata
+- `AnalyzerRegistry` mapping file extensions to analyzers via `Arc<dyn LanguageAnalyzer>`
+- Scanner and runner both use registry (no more hardcoded extension lists)
+- Dynamic SQL `IN (...)` clause built from registry extensions
+- CSS analyzer reference plugin with 7 unit tests
+- `get_plugin_info` Tauri command
+- Plugin architecture documentation (`docs/plugin-architecture.md`)
+- 12 new Rust tests (117 total)
+
 ## Milestone 11 — Git Evolution Dashboard
 
 **Status:** Complete
