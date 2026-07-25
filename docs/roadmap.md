@@ -1,6 +1,6 @@
 # Roadmap
 
-## Milestone 0 — Foundation (current)
+## Milestone 0 — Foundation
 
 **Status:** Complete
 
@@ -61,16 +61,6 @@
 - Incremental invalidation via `analysis_status` on `indexed_files`
 - "Analyze" button and imports display in the Workspaces UI
 - Rust tests for parser, resolver, imports, and diagnostics across all supported languages
-
-## Milestone 4 — Structural Visualization
-
-**Status:** Not started
-
-- File dependency graph (interactive, zoomable)
-- Directory tree view
-- File detail panel (size, language, dependencies)
-- Graph filtering by language, file type, directory
-- Graph export (PNG/SVG)
 
 ## Milestone 4 — File Dependency Graph Visualization
 
@@ -194,10 +184,17 @@
 
 **Status:** Complete
 
-- Auto-update mechanism
+- Local Git repository detection, branch, status, and commit history
+- File-change history and co-change hotspot persistence
+- Per-workspace opt-in Git tracking setting
 - Installer configuration (MSI/NSIS for Windows)
 - Application icon and branding
-- Keyboard shortcuts
-- Theme support (light/dark)
-- Performance optimization for large repositories
-- Cross-platform testing (macOS, Linux)
+
+## Post-v1.0 candidates
+
+**Status:** Not started
+
+- Auto-update mechanism
+- Theme selection
+- macOS and Linux packaging/testing
+- Graph export (PNG/SVG)

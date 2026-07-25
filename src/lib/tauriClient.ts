@@ -219,9 +219,7 @@ export const tauriClient = {
     });
   },
 
-  getRepositoryEvolution(
-    workspaceId: number,
-  ): Promise<RepositoryEvolution> {
+  getRepositoryEvolution(workspaceId: number): Promise<RepositoryEvolution> {
     return call<RepositoryEvolution>('get_repository_evolution', {
       workspaceId,
     });

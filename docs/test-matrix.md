@@ -1,29 +1,33 @@
 # Test Matrix
 
-Last updated: 2026-07-07 | Total: 108 tests
+Last updated: 2026-07-26 | Total: 130 tests
 
-## Rust Tests (98)
+## Rust Tests (118)
 
-### Unit Tests (78)
+### Unit Tests (99)
 
-| Module                 | Tests | Coverage                                                                                                                                                                                                                                                                                                                                               |
-| ---------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `platform`             | 3     | Path normalization, case sensitivity, descendant detection                                                                                                                                                                                                                                                                                             |
-| `db::connection`       | 3     | Database open, migration runner, path retrieval                                                                                                                                                                                                                                                                                                        |
-| `db::mod`              | 1     | All V1–V8 tables and columns created                                                                                                                                                                                                                                                                                                                   |
-| `db::indexed_folders`  | 7     | Insert, list, duplicate detection, nested parent, remove, persist, lifecycle                                                                                                                                                                                                                                                                           |
-| `db::indexed_files`    | 4     | Upsert change detection (new/changed/unchanged), generation-based removal                                                                                                                                                                                                                                                                              |
-| `db::scan_runs`        | 2     | Create/start/finish round-trip, interrupted run marking                                                                                                                                                                                                                                                                                                |
-| `db::imports`          | 1     | Replace and list round-trip                                                                                                                                                                                                                                                                                                                            |
-| `commands::workspaces` | 1     | Empty fetch for new database                                                                                                                                                                                                                                                                                                                           |
-| `tasks`                | 2     | Register and cancel, cancel unknown run                                                                                                                                                                                                                                                                                                                |
-| `scanner`              | 18    | Empty folder, nested files, ignored dirs, unsupported files, symlinks, cancellation, preserve previous, incremental detection, warnings reconciliation, cancelled never reconciles, successful removal, same-second gens, failed preserves snapshot, partial upserts, unchanged rescan, new file detection, completed_with_errors skips reconciliation |
-| `analysis::ts_js`      | 10    | Static default, named, re-export, re-export all, require, dynamic import, relative resolution, malformed, empty, multiple                                                                                                                                                                                                                              |
-| `analysis::resolver`   | 6     | External package, relative with ext, without ext, index fallback, unresolved, path traversal                                                                                                                                                                                                                                                           |
-| `analysis::graph`      | 5     | Empty graph, two-node, cycle detection, isolated node, large-graph truncation                                                                                                                                                                                                                                                                          |
-| `analysis::symbols`    | 11    | Function, class+method, interface, type alias, enum, arrow, react component, source location, malformed, exported const, class declaration                                                                                                                                                                                                             |
-| `analysis::references` | 6     | Simple call, method call, new expression, call inside function, multiple calls, no calls                                                                                                                                                                                                                                                               |
-| `error`                | 3     | Stable/unique error codes, user message explains recovery, payload round-trip                                                                                                                                                                                                                                                                          |
+| Module                   | Tests | Coverage                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `platform`               | 3     | Path normalization, case sensitivity, descendant detection                                                                                                                                                                                                                                                                                                                |
+| `db::connection`         | 3     | Database open, migration runner, path retrieval                                                                                                                                                                                                                                                                                                                           |
+| `db::mod`                | 1     | All V1–V9 tables and columns created                                                                                                                                                                                                                                                                                                                                      |
+| `db::indexed_folders`    | 7     | Insert, list, duplicate detection, nested parent, remove, persist, lifecycle                                                                                                                                                                                                                                                                                              |
+| `db::indexed_files`      | 2     | Upsert change detection (new/changed/unchanged), generation-based removal                                                                                                                                                                                                                                                                                                 |
+| `db::scan_runs`          | 2     | Create/start/finish round-trip, interrupted run marking                                                                                                                                                                                                                                                                                                                   |
+| `db::imports`            | 2     | Replace/list round-trip, reverse references                                                                                                                                                                                                                                                                                                                               |
+| `commands::workspaces`   | 1     | Empty fetch for new database                                                                                                                                                                                                                                                                                                                                              |
+| `tasks`                  | 2     | Register and cancel, cancel unknown run                                                                                                                                                                                                                                                                                                                                   |
+| `scanner`                | 18    | Empty folder, nested files, ignored dirs, unsupported files, symlinks, cancellation, preserve previous, incremental detection, warnings reconciliation, cancelled never reconciles, successful removal, same-second gens, failed preserves snapshot, partial upserts and final counters, unchanged rescan, new file detection, completed_with_errors skips reconciliation |
+| `analysis::css_analyzer` | 7     | CSS imports, URL syntax, quoting, multiple/empty imports, query stripping                                                                                                                                                                                                                                                                                                 |
+| `analysis::plugin`       | 5     | Registry construction, extensions, lookup, plugin metadata                                                                                                                                                                                                                                                                                                                |
+| `analysis::evolution`    | 3     | Empty report, month conversion, report aggregation                                                                                                                                                                                                                                                                                                                        |
+| `analysis::health`       | 4     | Empty/report data, cycle signals, bounded risk score                                                                                                                                                                                                                                                                                                                      |
+| `analysis::ts_js`        | 10    | Static default, named, re-export, re-export all, require, dynamic import, relative resolution, malformed, empty, multiple                                                                                                                                                                                                                                                 |
+| `analysis::resolver`     | 6     | External package, relative with ext, without ext, index fallback, unresolved, path traversal                                                                                                                                                                                                                                                                              |
+| `analysis::graph`        | 5     | Empty graph, two-node, cycle detection, isolated node, large-graph truncation                                                                                                                                                                                                                                                                                             |
+| `analysis::symbols`      | 9     | Function, class, interface, type alias, enum, arrow, React component, source location, malformed source                                                                                                                                                                                                                                                                   |
+| `analysis::references`   | 6     | Simple call, method call, new expression, call inside function, multiple calls, no calls                                                                                                                                                                                                                                                                                  |
+| `error`                  | 3     | Stable/unique error codes, user message explains recovery, payload round-trip                                                                                                                                                                                                                                                                                             |
 
 ### Integration Tests — fixture project (9)
 
@@ -41,30 +45,35 @@ Last updated: 2026-07-07 | Total: 108 tests
 
 ### Failure-Path Tests (10)
 
-| Test                                                 | Coverage                                            |
-| ---------------------------------------------------- | --------------------------------------------------- |
-| `git_functions_return_none_for_non_git_directory`    | Missing/invalid git repo → no panic                 |
-| `git_failure_does_not_panic_on_invalid_path`         | Git against nonexistent path → false/None           |
-| `large_file_truncation_marks_truncated_and_caps_size`| >1 MB file viewer truncation + 1 MB cap             |
-| `analysis_cancellation_stops_early_without_panic`    | Cancel token stops the analysis loop                |
-| `concurrent_scan_rejected_with_scan_already_running` | Second scan while one is running is rejected        |
-| `deleted_workspace_directory_reports_missing`        | Deleted folder → availability = missing             |
-| `malformed_utf8_file_does_not_crash_scan_or_analysis`| Invalid UTF-8 bytes → lossy read, no panic          |
-| `interrupted_runs_marked_on_database_reopen`         | Crash-recovery marks running scans interrupted      |
-| `graph_truncation_caps_nodes_at_limit`               | >500-node graph truncates with `truncated` flag     |
+| Test                                                  | Coverage                                        |
+| ----------------------------------------------------- | ----------------------------------------------- |
+| `git_functions_return_none_for_non_git_directory`     | Missing/invalid git repo → no panic             |
+| `git_failure_does_not_panic_on_invalid_path`          | Git against nonexistent path → false/None       |
+| `large_file_truncation_marks_truncated_and_caps_size` | >1 MB file viewer truncation + 1 MB cap         |
+| `analysis_cancellation_stops_early_without_panic`     | Cancel token stops the analysis loop            |
+| `concurrent_scan_rejected_with_scan_already_running`  | Second scan while one is running is rejected    |
+| `deleted_workspace_directory_reports_missing`         | Deleted folder → availability = missing         |
+| `malformed_utf8_file_does_not_crash_scan_or_analysis` | Invalid UTF-8 bytes → lossy read, no panic      |
+| `missing_source_file_returns_file_not_found`          | Removed file → typed file-not-found error       |
+| `interrupted_runs_marked_on_database_reopen`          | Crash-recovery marks running scans interrupted  |
+| `graph_truncation_caps_nodes_at_limit`                | >500-node graph truncates with `truncated` flag |
 
-## Frontend Tests (10)
+## Frontend Tests (12)
 
 | Test                           | Coverage                            |
 | ------------------------------ | ----------------------------------- |
 | Application shell + brand text | App renders correctly               |
 | Home page version              | Application info loads              |
 | Database status display        | DB connected + path visible         |
+| Database path redaction        | Windows profile hidden in the UI    |
 | Workspaces empty state         | Navigation + empty UI               |
+| Persisted workspace file count | Existing scan status loads on entry |
 | Settings page                  | Navigation + database status label  |
 | Insights page folder selector  | Navigation + dropdown visible       |
 | Error state on failure         | Workspace list error → error banner |
 | Retry button                   | Error state includes retry action   |
+| Default English translations   | English catalog is available        |
+| Chinese language switch        | Runtime locale change updates text  |
 
 ## Benchmarks
 

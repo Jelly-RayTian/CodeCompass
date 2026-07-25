@@ -369,8 +369,7 @@ export const zh: typeof en = {
     mostActiveMonth: '最活跃月份',
     dateRange: '时间范围',
     timeline: '提交时间线',
-    noTimeline:
-      '没有提交数据。请在工作区设置中启用 Git 分析并打开此文件夹。',
+    noTimeline: '没有提交数据。请在工作区设置中启用 Git 分析并打开此文件夹。',
     fileChurn: '文件变更频率',
     noChurn: '没有变更频率数据。',
     changes: '变更次数',

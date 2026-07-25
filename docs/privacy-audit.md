@@ -1,6 +1,6 @@
 # Privacy Audit
 
-**Audit date:** 2026-06-24
+**Audit date:** 2026-07-25
 **Scope:** CodeCompass runtime (frontend + Rust backend + Tauri config + dependencies)
 **Auditor method:** static source search + dependency manifest review
 
@@ -17,12 +17,12 @@ been corrected — Monaco is now bundled locally (see
 
 ## What the application accesses
 
-| Resource                        | When                            | Purpose                  | Network? |
-| ------------------------------- | ------------------------------- | ------------------------ | -------- |
-| Filesystem (read metadata only) | Register/scan a folder          | Build file index         | No       |
-| Filesystem (read source text)   | Analyze/view a file             | AST parse, code viewer   | No       |
-| App data directory (read/write) | Always                          | Store the SQLite index   | No       |
-| `git` child process             | Git panel, on a Git repo        | Branch/status/commits    | No (local subprocess) |
+| Resource                        | When                     | Purpose                | Network?              |
+| ------------------------------- | ------------------------ | ---------------------- | --------------------- |
+| Filesystem (read metadata only) | Register/scan a folder   | Build file index       | No                    |
+| Filesystem (read source text)   | Analyze/view a file      | AST parse, code viewer | No                    |
+| App data directory (read/write) | Always                   | Store the SQLite index | No                    |
+| `git` child process             | Git panel, on a Git repo | Branch/status/commits  | No (local subprocess) |
 
 ## What the application does **not** do
 
@@ -90,6 +90,10 @@ runs locally and never transmits data.
 `package.json` dependencies: React, React Router, Tauri API, React Flow,
 Monaco. None of these perform network requests at runtime once Monaco is
 bundled locally.
+
+The Home page formats the displayed database path as `%APPDATA%\…` on Windows
+so public screenshots do not expose the local account name. The full path
+remains available as a hover title for local troubleshooting.
 
 ## Data stored locally
 

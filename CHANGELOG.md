@@ -2,15 +2,42 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [1.0.0] — 2026-07-26
+
+### Stable release
+
+- Promoted the complete local-first scan, analysis, graph, symbol, viewer,
+  insights, impact, health, evolution, and analyzer-plugin workflow to the
+  first stable public release.
+- Aligned the npm, Cargo, Tauri, and lockfile versions at `1.0.0`.
+- Configured the tag workflow to create a stable GitHub Release from
+  `RELEASE_NOTES.md` and attach both Windows installer formats.
+- Replaced placeholder release media with screenshots captured from the running
+  release build and a demo GIF assembled from those captures.
+- Updated product, architecture, database, privacy, testing, roadmap, release,
+  and portfolio documentation to match implemented behavior.
+
+### Fixed
+
+- Persist final scan counters for partial batches before finishing or cancelling
+  a run, preventing correctly indexed repositories under 500 files from showing
+  a zero-file scan summary.
+- Keep terminal scan state under polling ownership in the React workspace page,
+  so the UI fetches the persisted final run before clearing the active scan.
+- Hydrate persisted scan statuses when the Workspaces page opens, so file counts
+  remain correct after navigating away and back.
+- Mask the Windows account name in the Home page's displayed database path
+  while retaining the full path in the hover title.
+
 ## [0.5.0] — 2026-07-17
 
 ### Performance (measured, release build)
 
-| Phase | 5,000 files (v0.4.0) | 5,000 files (v0.5.0) | Speedup |
-|-------|--------------------:|--------------------:|--------:|
-| Analyze | 24,112.9 ms | 2,837.0 ms | **8.5×** |
-| Scan | 361.9 ms | 255.3 ms | 1.4× |
-| Graph | 2.9 ms | 4.4 ms | — |
+| Phase   | 5,000 files (v0.4.0) | 5,000 files (v0.5.0) |  Speedup |
+| ------- | -------------------: | -------------------: | -------: |
+| Analyze |          24,112.9 ms |           2,837.0 ms | **8.5×** |
+| Scan    |             361.9 ms |             255.3 ms |     1.4× |
+| Graph   |               2.9 ms |               4.4 ms |        — |
 
 At 1,000 files: Analyze 16.7× faster, Scan 3.7× faster.
 

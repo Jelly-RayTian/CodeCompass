@@ -221,20 +221,6 @@ export function Workspaces(): JSX.Element {
             },
           };
         });
-        if (
-          e.status !== 'running' &&
-          e.status !== 'queued' &&
-          e.status !== 'pending'
-        ) {
-          setScanningFolderId((current) =>
-            current === e.workspaceId ? null : current,
-          );
-          reloadFolders();
-          if (selectedFolderId === e.workspaceId) {
-            loadFiles(e.workspaceId);
-            loadHistory(e.workspaceId);
-          }
-        }
       });
     };
 
@@ -247,7 +233,7 @@ export function Workspaces(): JSX.Element {
         unlisten();
       }
     };
-  }, [selectedFolderId, reloadFolders]);
+  }, []);
 
   useEffect(() => {
     let unlisten: (() => void) | undefined;
@@ -313,6 +299,42 @@ export function Workspaces(): JSX.Element {
       window.clearInterval(id);
     };
   }, [scanningFolderId, reloadFolders, selectedFolderId]);
+
+  useEffect(() => {
+    if (foldersState.status !== 'ready') {
+      return undefined;
+    }
+
+    let cancelled = false;
+    const hydrateScanStatuses = async (): Promise<void> => {
+      const entries = await Promise.all(
+        foldersState.data.map(async (folder) => {
+          const status = await tauriClient.getScanStatus(folder.id);
+          return [folder.id, status] as const;
+        }),
+      );
+      if (cancelled) {
+        return;
+      }
+      setScanStatus((previous) => {
+        const next = { ...previous };
+        for (const [folderId, status] of entries) {
+          if (status !== null) {
+            next[folderId] = status;
+          }
+        }
+        return next;
+      });
+    };
+
+    hydrateScanStatuses().catch((err: unknown) => {
+      console.error('Failed to hydrate scan statuses', err);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [foldersState]);
 
   const loadFiles = async (folderId: number): Promise<void> => {
     setFilesLoading(true);
@@ -588,7 +610,9 @@ export function Workspaces(): JSX.Element {
                     </div>
                   </div>
                   <div>
-                    <div className="folder-meta-label">{t.workspaces.added}</div>
+                    <div className="folder-meta-label">
+                      {t.workspaces.added}
+                    </div>
                     <div className="folder-meta-value">
                       {formatTimestamp(folder.addedAt, t.general.never)}
                     </div>
@@ -754,13 +778,19 @@ export function Workspaces(): JSX.Element {
                     <div className="file-detail-row">
                       <span>{t.workspaces.lastSuccessfulScan}</span>
                       <span>
-                        {formatTimestamp(selectedFile.modifiedAt, t.general.never)}
+                        {formatTimestamp(
+                          selectedFile.modifiedAt,
+                          t.general.never,
+                        )}
                       </span>
                     </div>
                     <div className="file-detail-row">
                       <span>{t.workspaces.added}</span>
                       <span>
-                        {formatTimestamp(selectedFile.createdAt, t.general.never)}
+                        {formatTimestamp(
+                          selectedFile.createdAt,
+                          t.general.never,
+                        )}
                       </span>
                     </div>
                     <div className="file-detail-row">
@@ -876,9 +906,7 @@ export function Workspaces(): JSX.Element {
       {removingId !== null && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal" role="dialog" aria-modal="true">
-            <div className="modal-title">
-              {t.workspaces.removeConfirmTitle}
-            </div>
+            <div className="modal-title">{t.workspaces.removeConfirmTitle}</div>
             <p className="modal-body">{t.workspaces.removeConfirmBody}</p>
             <div className="modal-actions">
               <button

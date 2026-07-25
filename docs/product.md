@@ -42,8 +42,13 @@ Everything runs locally. No code leaves the user's machine.
 
 ## Current Status
 
-The **foundation milestone** delivers the application shell, database
-infrastructure, and three minimal pages (Home, Workspaces, Settings). No
-scanning, analysis, or visualization is implemented yet.
+CodeCompass v1.0 provides the complete local workflow: register a repository,
+scan and analyze supported source files, explore dependency and call graphs,
+search symbols, read source in a guarded viewer, review structural insights,
+estimate change impact, and inspect local Git health/evolution signals.
+
+The verified release target is Windows. TypeScript, JavaScript, TSX, JSX, and
+CSS analysis are supported. macOS/Linux distribution, auto-update, and cloud
+features are not part of v1.0.
 
 See [docs/roadmap.md](roadmap.md) for the planned milestones.

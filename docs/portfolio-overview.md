@@ -18,7 +18,7 @@ source-code upload.
 
 - **End-to-end analysis pipeline.** Metadata scan → AST parse → import
   resolution → symbol/reference extraction → graph construction →
-  insights — all in one local app, with 96 passing Rust tests and a
+  insights — all in one local app, with 118 passing Rust tests and a
   Vitest frontend suite.
 - **Safe incremental rescans.** A monotonic `scan_generation` counter
   (migration V8) makes deletion reconciliation correct even when two
@@ -46,7 +46,7 @@ source-code upload.
    reconciliation itself fails. Five regression tests pin this behaviour.
 2. **Cross-thread SQLite.** `rusqlite::Connection` is `Send` not `Sync`,
    so all access goes through `Mutex<Connection>` managed as Tauri state.
-   Batching writes in transactions of 100 keeps lock contention low.
+   Batching writes in transactions of 500 keeps lock contention low.
 3. **AST analysis of untrusted source.** Malformed files must not crash
    the run. OXC parses in-memory; failures produce diagnostics and a
    `parse_error` status, then the runner continues with the next file.
@@ -57,9 +57,9 @@ source-code upload.
 
 ## Testing Strategy
 
-- **Rust:** 96 tests — 78 unit (scanner, db DAOs, analysis, resolver,
+- **Rust:** 118 tests — 99 unit (scanner, db DAOs, analysis, resolver,
   graph, symbols, references, platform, error), 9 fixture integration
-  (full scan+analyze+persistence lifecycle), 9 failure-path (missing
+  (full scan+analyze+persistence lifecycle), 10 failure-path (missing
   git, large file truncation, cancellation, concurrent scan, deleted
   workspace, malformed UTF-8, interrupted-run recovery, graph
   truncation). All use temp directories and temp SQLite databases.
@@ -67,7 +67,7 @@ source-code upload.
   `@testing-library/react` covering app shell, navigation, DB status,
   empty states, and error/retry paths.
 - **Quality gates:** `cargo fmt --check`, `cargo clippy --all-targets
-  -- -D warnings`, `cargo test`, `cargo check`, `npm run lint`,
+-- -D warnings`, `cargo test`, `cargo check`, `npm run lint`,
   `npm run typecheck` (strict + `noUncheckedIndexedAccess` +
   `exactOptionalPropertyTypes`), `npm run test`, `npm run build`.
 - **CI:** GitHub Actions on Windows runs the full suite on every push
@@ -77,7 +77,7 @@ source-code upload.
 ## Performance Strategy
 
 - **Metadata-only scanning** (never reads file contents during a scan).
-- **Batched SQLite upserts** in transactions of 100.
+- **Batched SQLite upserts** in transactions of 500.
 - **Indexed queries** — every foreign key and common filter has an index.
 - **Graph truncation** bounds response size for large repos.
 - **1 MB viewer cap** prevents loading huge files into Monaco.
@@ -105,17 +105,17 @@ source-code upload.
   TypeScript, and Rust, analyzing TypeScript/JavaScript repositories
   entirely offline with no telemetry.
 - Implemented a metadata-only repository scanner with incremental change
-  detection and generation-based deletion reconciliation, backed by 96
+  detection and generation-based deletion reconciliation, backed by 118
   passing Rust tests.
 - Integrated the OXC AST parser to extract imports, symbols, and call
   references, resolving relative specifiers with path-traversal
   protection.
-- Designed an 8-migration SQLite schema (WAL mode, indexed) with
+- Designed a 9-migration SQLite schema (WAL mode, indexed) with
   refinery for embedded, ordered, versioned migrations.
 - Added large-repository safety via graph truncation, a 1 MB viewer cap,
   and batched transactional upserts.
 - Hardened release engineering with a version-alignment script,
-  least-privilege CI, and unsigned-instler warnings.
+  least-privilege CI, and unsigned-installer warnings.
 - Wrote a reproducible Criterion benchmark harness generating 100–5,000
   file fixtures at runtime to measure scan/analysis/graph performance.
 - Audited and fixed a privacy gap: bundled the Monaco Editor runtime

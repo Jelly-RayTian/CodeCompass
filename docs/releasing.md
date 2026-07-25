@@ -8,8 +8,8 @@ npm run tauri:build
 
 Artifacts are in `src-tauri/target/release/bundle/`:
 
-- NSIS: `bundle/nsis/CodeCompass_0.1.1_x64-setup.exe`
-- MSI: `bundle/msi/CodeCompass_0.1.1_x64_en-US.msi`
+- NSIS: `bundle/nsis/CodeCompass_1.0.0_x64-setup.exe`
+- MSI: `bundle/msi/CodeCompass_1.0.0_x64_en-US.msi`
 
 ## Versioning
 
@@ -28,7 +28,7 @@ A release-time script fails when any of these disagree:
 
 ```bash
 npm run check:versions                       # internal consistency
-node scripts/check-versions.mjs --tag=v0.1.1   # also check the tag
+node scripts/check-versions.mjs --tag=v1.0.0   # also check the tag
 ```
 
 The CI and Release workflows run `check:versions` automatically; the
@@ -47,8 +47,8 @@ npm run check:versions
 npm run tauri:build
 
 # 3. Tag exactly (do not let CI infer the version):
-git tag v0.1.1
-git push origin v0.1.1
+git tag -a v1.0.0 -m "CodeCompass v1.0.0"
+git push origin v1.0.0
 ```
 
 Pushing a tag matching `v*` triggers the GitHub Actions release workflow
@@ -58,7 +58,7 @@ Pushing a tag matching `v*` triggers the GitHub Actions release workflow
 2. Runs the full CI suite (lint, typecheck, test, build, fmt, clippy, test, check)
 3. Builds NSIS (required) and MSI (optional) installers
 4. Fails clearly if the NSIS installer is missing
-5. Creates a GitHub **prerelease** with uploaded artifacts and unsigned-installer notes
+5. Creates a GitHub Release using `RELEASE_NOTES.md` and uploads the installers
 
 ### Permissions
 
@@ -89,7 +89,7 @@ branded CodeCompass compass badge (generated from
 - **Installer identifier**: The identifier is `io.github.jellyraytian.codecompass`. v0.1.0-alpha installs are **not compatible** with future releases using a different identifier — uninstall the old version first.
 - **No auto-update**: Users must manually download new versions. The app performs no runtime update checks.
 
-## Pre-release Checklist
+## Release Checklist
 
 - [ ] All tests pass: `cargo test && npm run test`
 - [ ] Clippy clean: `cargo clippy --all-targets -- -D warnings`
@@ -103,3 +103,4 @@ branded CodeCompass compass badge (generated from
 - [ ] GitHub Release created by CI
 - [ ] Installers uploaded and downloadable
 - [ ] Smoke test: install and launch the `.exe`, verify branded icon
+- [ ] Release is marked as the latest stable release, not a prerelease

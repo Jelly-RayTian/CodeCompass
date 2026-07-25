@@ -7,15 +7,13 @@
 **A local-first desktop application for understanding unfamiliar code repositories.**
 
 [![CI](https://github.com/Jelly-RayTian/CodeCompass/actions/workflows/ci.yml/badge.svg)](https://github.com/Jelly-RayTian/CodeCompass/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/Jelly-RayTian/CodeCompass?include_prereleases&label=release)](https://github.com/Jelly-RayTian/CodeCompass/releases)
+[![Release](https://img.shields.io/github/v/release/Jelly-RayTian/CodeCompass?label=release)](https://github.com/Jelly-RayTian/CodeCompass/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D4)](#installation)
 
-**Status: v0.1.1 Alpha** — stability and polish release. Bug fixes, faster progress updates, clearer error messages, and additional tests.
+**Status: v1.0.0 Stable** — the first production-oriented public release.
 
 CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, understand, and assess codebases — entirely offline. No cloud uploads, no AI training on your source code, no network requests after installation.
-
-> Screenshots are pending — see [docs/screenshots/README.md](docs/screenshots/README.md) for the capture checklist. The screenshot paths below will be populated as they are taken.
 
 ## Why I Built CodeCompass
 
@@ -26,22 +24,28 @@ Existing tools either upload your code to the cloud or require setting up comple
 ## Hero Screenshot
 
 ![Home](docs/screenshots/home.png)
-> _Screenshot to be captured. See the screenshot checklist._
+
+## Demo
+
+![CodeCompass demo](docs/screenshots/demo.gif)
 
 ## Features
 
-| Category                | Highlights                                                      |
-| ----------------------- | --------------------------------------------------------------- |
-| **Repository Scanning** | Recursive traversal, ignore rules, incremental change detection |
-| **AST Analysis**        | Static/dynamic imports, re-exports, CommonJS `require`          |
-| **Symbol Indexing**     | Functions, classes, interfaces, types, enums, React components  |
+| Category                | Highlights                                                                |
+| ----------------------- | ------------------------------------------------------------------------- |
+| **Repository Scanning** | Recursive traversal, ignore rules, incremental change detection           |
+| **AST Analysis**        | Static/dynamic imports, re-exports, CommonJS `require`                    |
+| **Symbol Indexing**     | Functions, classes, interfaces, types, enums, React components            |
 | **Dependency Graph**    | Interactive React Flow, cycle detection, node details, large-graph safety |
-| **Symbol Search**       | Name/kind filtering, pagination, click-to-view                  |
-| **Code Viewer**         | Monaco Editor, syntax highlighting, search, 1 MB safety cap     |
-| **Insights**            | Entry-point detection, reading paths, structural findings       |
-| **Impact Analysis**     | Call graph, transitive dependents, change risk scoring          |
-| **Git Integration**     | Branch/status/commits, co-change hotspots (optional, local only)|
-| **i18n**                | Chinese / English                                               |
+| **Symbol Search**       | Name/kind filtering, pagination, click-to-view                            |
+| **Code Viewer**         | Monaco Editor, syntax highlighting, search, 1 MB safety cap               |
+| **Insights**            | Entry-point detection, reading paths, structural findings                 |
+| **Impact Analysis**     | Call graph, transitive dependents, change risk scoring                    |
+| **Git Integration**     | Branch/status/commits, co-change hotspots (optional, local only)          |
+| **Repository Health**   | Evidence-based risk signals with explicit heuristic caveats               |
+| **Evolution Dashboard** | Commit timeline, churn ranking, and co-change hotspots                    |
+| **Plugin Architecture** | Registry-based analyzers with TypeScript/JavaScript and CSS               |
+| **i18n**                | Chinese / English                                                         |
 
 ## Demo Workflow
 
@@ -66,7 +70,7 @@ Existing tools either upload your code to the cloud or require setting up comple
 │  Import resolver · Git subprocess (safe args)  │
 │  ScanManager / AnalysisManager (cancellation)  │
 ├────────────────────────────────────────────────┤
-│  SQLite (WAL, rusqlite bundled, V1→V8)         │
+│  SQLite (WAL, rusqlite bundled, V1→V9)         │
 │  refinery migrations (embedded at compile time)│
 └────────────────────────────────────────────────┘
 ```
@@ -79,8 +83,8 @@ for the rationale behind each technology choice.
 
 Download from [Releases](https://github.com/Jelly-RayTian/CodeCompass/releases):
 
-- **NSIS**: `CodeCompass_0.1.1_x64-setup.exe` (required)
-- **MSI**: `CodeCompass_0.1.1_x64_en-US.msi` (optional)
+- **NSIS**: `CodeCompass_1.0.0_x64-setup.exe` (required)
+- **MSI**: `CodeCompass_1.0.0_x64_en-US.msi` (optional)
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 
@@ -101,7 +105,7 @@ npm run tauri:dev
 npm test                       # frontend tests (Vitest)
 npm run lint                   # ESLint
 npm run typecheck              # TypeScript strict check
-cd src-tauri && cargo test     # 98 Rust tests
+cd src-tauri && cargo test
 cd src-tauri && cargo clippy --all-targets -- -D warnings
 ```
 
@@ -136,28 +140,28 @@ statement.
 
 ## Screenshot Gallery
 
-| Home | Workspaces |
-| ---- | ---------- |
+| Home                               | Workspaces                                     |
+| ---------------------------------- | ---------------------------------------------- |
 | ![Home](docs/screenshots/home.png) | ![Workspaces](docs/screenshots/workspaces.png) |
 
-| Dependency Graph | Code Viewer |
-| ---------------- | ----------- |
+| Dependency Graph                     | Code Viewer                            |
+| ------------------------------------ | -------------------------------------- |
 | ![Graph](docs/screenshots/graph.png) | ![Viewer](docs/screenshots/viewer.png) |
 
-| Insights |
-| -------- |
+| Insights                                   |
+| ------------------------------------------ |
 | ![Insights](docs/screenshots/insights.png) |
 
-> Screenshots are captured manually before each release. If an image
-> above is broken, the corresponding screenshot has not yet been taken —
-> see [docs/screenshots/README.md](docs/screenshots/README.md).
+> Screenshots and the demo GIF are captured from a running release build;
+> see [docs/screenshots/README.md](docs/screenshots/README.md) for the
+> reproducible capture checklist.
 
 ## Technical Challenges & Solutions
 
 - **Safe deletion reconciliation on cancelled scans** — a monotonic
   `scan_generation` counter (migration V8) replaces second-resolution
   timestamp comparison, so files are only marked removed after a
-  *complete* traversal. Cancelled or error-degraded scans preserve the
+  _complete_ traversal. Cancelled or error-degraded scans preserve the
   previous snapshot.
 - **AST parsing of untrusted source** — OXC parses in-memory; malformed
   files produce diagnostics but never block analysis of the rest of the
@@ -183,19 +187,19 @@ statement.
 
 ## Roadmap
 
-| Milestone                           | Status         |
-| ----------------------------------- | -------------- |
-| Foundation (Tauri + React + SQLite) | ✅ Complete    |
-| Repository Scanning                 | ✅ Complete    |
-| AST Import Analysis                 | ✅ Complete    |
-| File Dependency Graph               | ✅ Complete    |
-| Symbol Indexing & Search            | ✅ Complete    |
-| Code Viewer & Navigation            | ✅ Complete    |
-| Entry Points & Insights             | ✅ Complete    |
-| Call Graph & Impact Analysis        | ✅ Complete    |
-| Git Integration                     | ✅ Complete    |
-| Release Engineering & Distribution  | ✅ Complete    |
-| Polish & Stable Release             | 🚧 In Progress |
+| Milestone                           | Status      |
+| ----------------------------------- | ----------- |
+| Foundation (Tauri + React + SQLite) | ✅ Complete |
+| Repository Scanning                 | ✅ Complete |
+| AST Import Analysis                 | ✅ Complete |
+| File Dependency Graph               | ✅ Complete |
+| Symbol Indexing & Search            | ✅ Complete |
+| Code Viewer & Navigation            | ✅ Complete |
+| Entry Points & Insights             | ✅ Complete |
+| Call Graph & Impact Analysis        | ✅ Complete |
+| Git Integration                     | ✅ Complete |
+| Release Engineering & Distribution  | ✅ Complete |
+| Polish & Stable Release             | ✅ Complete |
 
 See [docs/roadmap.md](docs/roadmap.md) for the detailed plan.
 

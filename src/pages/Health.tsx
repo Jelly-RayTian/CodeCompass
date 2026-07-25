@@ -136,11 +136,34 @@ export function Health(): JSX.Element {
           {/* Risk Distribution */}
           <section>
             <h2 className="section-title">{t.health.riskDistribution}</h2>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-              <RiskBadge label={t.health.lowRisk} count={health.summary.filesLowRisk} color="#16a34a" />
-              <RiskBadge label={t.health.mediumRisk} count={health.summary.filesMediumRisk} color="#ca8a04" />
-              <RiskBadge label={t.health.highRisk} count={health.summary.filesHighRisk} color="#ea580c" />
-              <RiskBadge label={t.health.criticalRisk} count={health.summary.filesCriticalRisk} color="#dc2626" />
+            <div
+              style={{
+                display: 'flex',
+                gap: 12,
+                marginBottom: 24,
+                flexWrap: 'wrap',
+              }}
+            >
+              <RiskBadge
+                label={t.health.lowRisk}
+                count={health.summary.filesLowRisk}
+                color="#16a34a"
+              />
+              <RiskBadge
+                label={t.health.mediumRisk}
+                count={health.summary.filesMediumRisk}
+                color="#ca8a04"
+              />
+              <RiskBadge
+                label={t.health.highRisk}
+                count={health.summary.filesHighRisk}
+                color="#ea580c"
+              />
+              <RiskBadge
+                label={t.health.criticalRisk}
+                count={health.summary.filesCriticalRisk}
+                color="#dc2626"
+              />
             </div>
           </section>
 
@@ -172,7 +195,10 @@ export function Health(): JSX.Element {
                 <div className="muted">{t.health.noData}</div>
               </div>
             ) : (
-              <FileTable files={showAll ? health.allFiles : health.topRiskFiles} t={t} />
+              <FileTable
+                files={showAll ? health.allFiles : health.topRiskFiles}
+                t={t}
+              />
             )}
           </section>
 

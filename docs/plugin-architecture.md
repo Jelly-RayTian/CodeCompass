@@ -23,6 +23,7 @@ multiple programming languages without modifying core analysis code.
 ```
 
 The scanner and analysis runner both consult the `AnalyzerRegistry`:
+
 - **Scanner**: checks if a file's extension is handled by any registered analyzer before indexing it.
 - **Runner**: looks up the right analyzer for each file's extension when performing AST analysis.
 
@@ -135,13 +136,13 @@ runner will dispatch them to your analyzer automatically.
 
 `src-tauri/src/analysis/css_analyzer.rs` is a complete, minimal example:
 
-| Feature           | Implementation                     |
-|-------------------|------------------------------------|
-| Language          | CSS                                |
-| Extensions        | `.css`                             |
+| Feature           | Implementation                      |
+| ----------------- | ----------------------------------- |
+| Language          | CSS                                 |
+| Extensions        | `.css`                              |
 | Imports extracted | `@import "..."`, `@import url(...)` |
-| symbols extracted | None                               |
-| Tests             | 7 unit tests                       |
+| symbols extracted | None                                |
+| Tests             | 7 unit tests                        |
 
 ## Plugin registry API
 

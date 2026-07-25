@@ -166,6 +166,15 @@ pub fn scan_workspace(
         // ── Cancellation ──
         if cancel.load(Ordering::Relaxed) {
             flush_batch(db, workspace_id, scan_generation, &mut batch)?;
+            update_scan_progress(
+                db,
+                run_id,
+                files_processed,
+                files_indexed,
+                warning_count,
+                error_count,
+                "cancelled",
+            )?;
             finish_scan_run(db, run_id, "cancelled", None)?;
             update_folder_scan_status(db, workspace_id, "idle", None)?;
             cb.emit_progress(ScanProgressEvent {
@@ -298,6 +307,15 @@ pub fn scan_workspace(
     }
 
     flush_batch(db, workspace_id, scan_generation, &mut batch)?;
+    update_scan_progress(
+        db,
+        run_id,
+        files_processed,
+        files_indexed,
+        warning_count,
+        error_count,
+        "finished",
+    )?;
 
     // ── Determine final status ──
     let final_status = if error_count > 0 {
@@ -444,7 +462,7 @@ mod tests {
     use super::*;
     use crate::db::indexed_files::list_workspace_files;
     use crate::db::indexed_folders::insert_indexed_folder;
-    use crate::db::scan_runs::create_scan_run;
+    use crate::db::scan_runs::{create_scan_run, latest_scan_run};
     use crate::db::Database;
     use tempfile::tempdir;
 
@@ -488,6 +506,25 @@ mod tests {
         let run = create_scan_run(&db, folder_id).expect("create");
         let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
         assert_eq!(summary.files_indexed, 2);
+    }
+
+    #[test]
+    fn final_partial_batch_persists_scan_counters() {
+        let (dir, db, folder_id) = setup();
+        let root = dir.path().join("scan_root");
+        std::fs::write(root.join("app.ts"), "export const app = true").expect("write");
+        std::fs::write(root.join("styles.css"), ".app { color: blue; }").expect("write");
+
+        let run = create_scan_run(&db, folder_id).expect("create");
+        let summary = run_test_scan(&db, folder_id, run.id, Arc::new(AtomicBool::new(false)));
+        let persisted = latest_scan_run(&db, folder_id)
+            .expect("load latest run")
+            .expect("latest run exists");
+
+        assert_eq!(summary.files_indexed, 2);
+        assert_eq!(persisted.files_indexed, summary.files_indexed);
+        assert_eq!(persisted.files_processed, summary.files_processed);
+        assert_eq!(persisted.phase.as_deref(), Some("finished"));
     }
 
     #[test]

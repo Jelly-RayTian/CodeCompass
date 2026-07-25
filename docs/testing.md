@@ -44,15 +44,12 @@ npm run test          # run once
 npm run test:watch    # watch mode
 ```
 
-### Current Tests
+### Current coverage
 
-| Test                                                           | What it verifies          |
-| -------------------------------------------------------------- | ------------------------- |
-| `renders the application shell with brand text`                | App mounts, brand visible |
-| `shows the home page with application version on initial load` | Home page loads data      |
-| `shows database status on the home page`                       | Database status renders   |
-| `navigates to the Workspaces page and shows empty state`       | Nav + empty state         |
-| `navigates to the Settings page`                               | Nav to settings           |
+The frontend suite currently contains 12 tests covering the application shell,
+Home data and database-path redaction, navigation, workspace empty/error states,
+retry behavior, Settings, Insights, and both supported languages. The exact
+breakdown is maintained in [test-matrix.md](test-matrix.md).
 
 ## Rust Tests
 
@@ -71,15 +68,14 @@ cargo test
 cargo test -- --nocapture   # show println! output
 ```
 
-### Current Tests
+### Current coverage
 
-| Module                   | Test                                        | What it verifies                    |
-| ------------------------ | ------------------------------------------- | ----------------------------------- |
-| `db/mod.rs`              | `migration_creates_all_tables`              | V1 migration creates all 4 tables   |
-| `db/connection.rs`       | `open_runs_migrations`                      | `Database::open` applies migrations |
-| `db/connection.rs`       | `open_in_memory_runs_migrations`            | In-memory DB also migrates          |
-| `db/connection.rs`       | `path_returns_provided_path`                | Path is stored correctly            |
-| `commands/workspaces.rs` | `fetch_workspaces_returns_empty_for_new_db` | Empty list for new DB               |
+The Rust suite currently contains 118 tests: 99 unit tests, 10 failure-path
+tests, and 9 fixture-project integration tests. They cover migrations V1–V9,
+database operations, scanner lifecycle and reconciliation, AST analysis,
+resolution, graphs, symbols, references, health/evolution calculations,
+task cancellation, error payloads, and end-to-end persistence. See
+[test-matrix.md](test-matrix.md) for the maintained inventory.
 
 ## CI
 

@@ -29,32 +29,32 @@
 
 ### Frontend (`src/`)
 
-| Directory     | Responsibility                                            |
-| ------------- | --------------------------------------------------------- |
-| `app/`        | Application shell, navigation, route definitions          |
-| `pages/`      | Top-level views: Home, Workspaces, Settings, Graph, Viewer, Insights |
-| `components/` | Reusable UI: LoadingState, EmptyState, ErrorState, CodeViewer |
+| Directory     | Responsibility                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------ |
+| `app/`        | Application shell, navigation, route definitions                                           |
+| `pages/`      | Top-level views: Home, Workspaces, Settings, Graph, Viewer, Insights                       |
+| `components/` | Reusable UI: LoadingState, EmptyState, ErrorState, CodeViewer                              |
 | `lib/`        | `tauriClient` (typed invoke wrapper), `useAsyncData` hook, `monacoConfig` (offline Monaco) |
-| `types/`      | Shared TypeScript interfaces mirroring Rust models        |
-| `styles/`     | Global CSS (system fonts, no remote resources)            |
-| `test/`       | Vitest setup, Tauri mock, test files                      |
+| `types/`      | Shared TypeScript interfaces mirroring Rust models                                         |
+| `styles/`     | Global CSS (system fonts, no remote resources)                                             |
+| `test/`       | Vitest setup, Tauri mock, test files                                                       |
 
 **Key rule:** Frontend components never touch the filesystem or database
 directly. All data access goes through `tauriClient`.
 
 ### Rust Backend (`src-tauri/src/`)
 
-| Module      | Responsibility                                                               |
-| ----------- | ---------------------------------------------------------------------------- |
-| `commands/` | `#[tauri::command]` functions — thin wrappers, no business logic             |
-| `db/`       | `Database` struct, migration runner, indexed-folder/file/scan-run DAOs, imports, symbols, references, workspace settings |
-| `models/`   | Serde structs mirroring frontend types                                       |
-| `error.rs`  | `AppError` enum with `thiserror` + `serde::Serialize` + actionable `user_message()` |
-| `platform/` | Path normalization and platform-aware path comparisons                       |
-| `scanner/`  | Recursive metadata-only traversal with `ScanCallbacks` trait for testability |
-| `tasks/`    | `ScanManager` and `AnalysisManager` for cancellation tokens                  |
+| Module      | Responsibility                                                                                                                                                       |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commands/` | `#[tauri::command]` functions — thin wrappers, no business logic                                                                                                     |
+| `db/`       | `Database` struct, migration runner, indexed-folder/file/scan-run DAOs, imports, symbols, references, workspace settings                                             |
+| `models/`   | Serde structs mirroring frontend types                                                                                                                               |
+| `error.rs`  | `AppError` enum with `thiserror` + `serde::Serialize` + actionable `user_message()`                                                                                  |
+| `platform/` | Path normalization and platform-aware path comparisons                                                                                                               |
+| `scanner/`  | Recursive metadata-only traversal with `ScanCallbacks` trait for testability                                                                                         |
+| `tasks/`    | `ScanManager` and `AnalysisManager` for cancellation tokens                                                                                                          |
 | `analysis/` | `LanguageAnalyzer` trait, TS/JS parser (OXC), import resolver, graph builder, symbols, references, entrypoint detection, reading paths, findings, call graph, impact |
-| `git/`      | Safe `git` subprocess invocation (argument lists, never shell interpolation) |
+| `git/`      | Safe `git` subprocess invocation (argument lists, never shell interpolation)                                                                                         |
 
 **Key rule:** Commands delegate to core logic. `commands/workspaces.rs` calls
 `fetch_indexed_folders(&db)`, not the other way around. This keeps the core
@@ -137,17 +137,17 @@ via `refinery::embed_migrations!` and run automatically on
 
 Key tables:
 
-| Table                 | Purpose                                              |
-| --------------------- | ---------------------------------------------------- |
-| `workspaces`          | Indexed folders (path, scan/analysis status, flags) |
-| `indexed_files`       | File metadata + fingerprints + change status + generation |
-| `imports`             | Import relationships (source, target, type, external)|
-| `analysis_diagnostics`| Per-file parse diagnostics                           |
-| `symbols`             | Extracted symbols (name, kind, location, parent)    |
-| `symbol_references`   | Caller→callee edges for call graph                   |
-| `git_file_changes`    | Co-change history from `git log`                     |
-| `scan_runs`           | Scan run records (status, counts, timestamps)       |
-| `app_settings`        | Key-value (scan generation counters, prefs)         |
+| Table                  | Purpose                                                   |
+| ---------------------- | --------------------------------------------------------- |
+| `workspaces`           | Indexed folders (path, scan/analysis status, flags)       |
+| `indexed_files`        | File metadata + fingerprints + change status + generation |
+| `imports`              | Import relationships (source, target, type, external)     |
+| `analysis_diagnostics` | Per-file parse diagnostics                                |
+| `symbols`              | Extracted symbols (name, kind, location, parent)          |
+| `symbol_references`    | Caller→callee edges for call graph                        |
+| `git_file_changes`     | Co-change history from `git log`                          |
+| `scan_runs`            | Scan run records (status, counts, timestamps)             |
+| `app_settings`         | Key-value (scan generation counters, prefs)               |
 
 WAL mode is enabled for concurrent read access. Indexes exist on all
 foreign-key and common filter columns (see the migration files for the

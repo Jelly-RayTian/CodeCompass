@@ -52,7 +52,14 @@ function timelineChart(points: TimelinePoint[]): JSX.Element {
               minHeight: 2,
             }}
           />
-          <span style={{ fontSize: 8, transform: 'rotate(-60deg)', marginTop: 4, whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              fontSize: 8,
+              transform: 'rotate(-60deg)',
+              marginTop: 4,
+              whiteSpace: 'nowrap',
+            }}
+          >
             {p.month.slice(2)}
           </span>
         </div>
@@ -224,7 +231,13 @@ export function GitEvolution(): JSX.Element {
               <div className="finding-list">
                 {evolution.topHotspots.map((h: CoChangePair, i: number) => (
                   <div key={i} className="card" style={{ padding: '8px 12px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      }}
+                    >
                       <span style={{ fontSize: 13 }}>
                         {h.fileA} {'\u2194'} {h.fileB}
                       </span>

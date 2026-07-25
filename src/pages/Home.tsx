@@ -6,8 +6,13 @@ import type { ApplicationInfo, DatabaseStatus, IndexedFolder } from '@/types';
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
 import { useT } from '@/i18n/useT';
+import { formatDatabasePath } from '@/lib/formatPath';
 
-type HomeData = { info: ApplicationInfo; db: DatabaseStatus; folders: IndexedFolder[] };
+type HomeData = {
+  info: ApplicationInfo;
+  db: DatabaseStatus;
+  folders: IndexedFolder[];
+};
 
 export function Home(): JSX.Element {
   const { t } = useT();
@@ -47,9 +52,7 @@ export function Home(): JSX.Element {
         >
           {t.home.openWorkspaces}
         </button>
-        {!hasFolders && (
-          <p className="home-hint">{t.home.scanFirst}</p>
-        )}
+        {!hasFolders && <p className="home-hint">{t.home.scanFirst}</p>}
       </div>
 
       <div className="card-grid">
@@ -80,7 +83,9 @@ export function Home(): JSX.Element {
 
       <div className="card">
         <div className="card-label">{t.settings.path}</div>
-        <div className="card-value">{db.databasePath}</div>
+        <div className="card-value" title={db.databasePath}>
+          {formatDatabasePath(db.databasePath)}
+        </div>
       </div>
 
       <div className="card">

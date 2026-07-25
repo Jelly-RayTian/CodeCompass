@@ -8,6 +8,7 @@ with the reasoning and tradeoffs behind each.
 **Decision:** Tauri 2.x.
 
 **Why:**
+
 - **Binary size & memory.** Tauri ships a small Rust binary and reuses the
   OS WebView (WebView2 on Windows) rather than bundling a full Chromium.
   CodeCompass installers are tens of MB, not hundreds.
@@ -20,6 +21,7 @@ with the reasoning and tradeoffs behind each.
   network, or shell scope is exposed to the webview.
 
 **Tradeoffs:**
+
 - Windows-only testing so far. Tauri supports macOS/Linux, but I have not
   verified the WebView differences there.
 - The Rust↔JS bridge is more typed but more verbose than Electron's Node
@@ -32,6 +34,7 @@ with the reasoning and tradeoffs behind each.
 **Decision:** `walkdir` + `std::fs::metadata` in Rust.
 
 **Why:**
+
 - **Speed.** Metadata-only traversal of thousands of files is fast in
   Rust with no GC pauses.
 - **Safety.** Path handling, symlinks, and root-containment checks are
@@ -43,19 +46,21 @@ with the reasoning and tradeoffs behind each.
   runtime.
 
 **Tradeoffs:**
+
 - Rust's borrow checker adds friction for batch mutations, but the
   `FileUpsert` / `drain(..)` pattern keeps it manageable.
 - No incremental filesystem watcher (e.g. `notify`) yet — rescans are
-  full traversals. This is acceptable for the alpha's batch model.
+  full traversals. This is acceptable for the v1.0 batch model.
 
 ## Why SQLite
 
 **Decision:** `rusqlite` (bundled SQLite) with `refinery` migrations.
 
 **Why:**
+
 - **Local-first.** SQLite is a single file in the app data directory. No
   server, no network, no credentials.
-- **Schema discipline.** Eight ordered, versioned migrations (`V1`–`V8`)
+- **Schema discipline.** Nine ordered, versioned migrations (`V1`–`V9`)
   embedded at compile time. Released migrations are never edited.
 - **Indexes.** Every foreign key and common filter has an index (see the
   migration files), which keeps graph and symbol queries fast at
@@ -63,11 +68,12 @@ with the reasoning and tradeoffs behind each.
 - **WAL mode** allows concurrent reads while a scan writes.
 
 **Tradeoffs:**
+
 - `Connection` is `Send` but not `Sync`, so we wrap it in
   `Mutex<Connection>`. Lock contention is low because writes are batched
   in transactions.
 - SQLite's `LIKE '%query%'` for symbol search is not full-text; it is
-  adequate for the alpha but a future FTS5 virtual table would scale
+  adequate for v1.0 but a future FTS5 virtual table would scale
   further.
 
 ## Why OXC
@@ -75,6 +81,7 @@ with the reasoning and tradeoffs behind each.
 **Decision:** `oxc_parser` / `oxc_ast` (v0.45) for AST analysis.
 
 **Why:**
+
 - **Speed.** OXC is a Rust-native TypeScript/JavaScript parser — no
   V8/Node required, no JS bridge overhead.
 - **Single process.** Parsing happens in the same Rust thread as the
@@ -84,6 +91,7 @@ with the reasoning and tradeoffs behind each.
   languages.
 
 **Tradeoffs:**
+
 - OXC is a fast-moving project; pinning to 0.45 trades the latest fixes
   for reproducibility.
 - Semantic type information (the type checker) is out of scope —
@@ -95,6 +103,7 @@ with the reasoning and tradeoffs behind each.
 **Decision:** No cloud, no accounts, no telemetry.
 
 **Why:**
+
 - **Trust.** Developers will not point a tool at their proprietary
   codebase if it uploads anything. Local-first is a feature, not a
   limitation, for the target audience.
@@ -104,16 +113,18 @@ with the reasoning and tradeoffs behind each.
   after installation.
 
 **Tradeoffs:**
+
 - No cross-machine sync. Users who want their index on multiple machines
   must re-scan (the index is cheap to rebuild).
 - No collaborative features. A future opt-in sync would require explicit
-  consent and a server — out of scope for the alpha.
+  consent and a server — out of scope for v1.0.
 
 ## Why no cloud AI
 
 **Decision:** No LLM/AI features that send source code off-device.
 
 **Why:**
+
 - **Privacy guarantee.** "Your code never leaves your machine" must be
   literally true. Any cloud AI feature would break it.
 - **Determinism.** Structural analysis (imports, symbols, graph) is
@@ -121,10 +132,11 @@ with the reasoning and tradeoffs behind each.
   them harder to test and trust.
 
 **Tradeoffs:**
+
 - No natural-language "explain this file" feature. The Insights engine
   uses structural heuristics (entry-point detection, reading paths,
   cycle detection) instead, which are explainable and fast.
-- A future *local* AI feature (e.g. an on-device model) could be added
+- A future _local_ AI feature (e.g. an on-device model) could be added
   without breaking the privacy guarantee, but that is out of scope.
 
 ## Why generation-based reconciliation
@@ -133,6 +145,7 @@ with the reasoning and tradeoffs behind each.
 of timestamp comparison for deletion detection.
 
 **Why:**
+
 - **Correctness.** Two scans completing within the same Unix-second
   would be ambiguous under timestamp comparison. A generation counter
   makes "files not seen this scan" unambiguous.
@@ -140,6 +153,7 @@ of timestamp comparison for deletion detection.
   scans, so a partial snapshot never deletes the previous good index.
 
 **Tradeoffs:**
+
 - An extra `app_settings` row per workspace. Negligible cost.
 - Slightly more schema complexity, documented in
   [docs/architecture.md](architecture.md).
@@ -150,13 +164,15 @@ of timestamp comparison for deletion detection.
 `truncated` flag rather than erroring.
 
 **Why:**
-- **User experience.** A thousand-file repo should show *something*
+
+- **User experience.** A thousand-file repo should show _something_
   useful (a warning + the first 500 nodes + filters) rather than a
   blank error.
 - **Safety.** Bounding the response size prevents the frontend from
   trying to render thousands of React Flow nodes at once.
 
 **Tradeoffs:**
+
 - The truncated view is not the complete graph. Users with very large
   repos must use the path/directory filter to see specific subgraphs.
   Cycle detection runs only on the returned subset.

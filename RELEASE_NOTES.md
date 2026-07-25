@@ -1,63 +1,70 @@
-# CodeCompass v0.5.0 Release Notes
+# CodeCompass v1.0.0 Release Notes
 
-**Release date:** 2026-07-17  
+**Release date:** 2026-07-26
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v0.5.0 is a **performance release** focused on large-repository throughput.
-All optimizations are data-driven, based on benchmarks in
-[docs/benchmarks.md](./docs/benchmarks.md).
+v1.0.0 is the first stable CodeCompass release. It packages the complete
+local-first workflow developed across the v0.x releases: register a repository,
+scan supported files, analyze imports and symbols, explore dependencies and
+source, and review repository insights without uploading source code.
 
 ## Highlights
 
-### Measured speed improvements (release build, 5,000 files)
+- **Local-first analysis:** source stays on the machine; the SQLite index stores
+  metadata and analysis results, not source contents.
+- **Repository understanding:** dependency graph, symbol search, Monaco source
+  viewer, entry points, reading paths, impact analysis, repository health, and
+  Git evolution views.
+- **Incremental and resilient scanning:** batched writes, change detection,
+  cancellation, generation-based deletion reconciliation, and recovery of
+  interrupted runs.
+- **Extensible analyzers:** the registry-based plugin architecture currently
+  handles TypeScript, JavaScript, and CSS.
+- **Release polish:** aligned v1.0.0 versions, stable-release CI configuration,
+  updated public documentation, real screenshots, and a demo GIF.
 
-| Phase | Before (v0.4.0) | After (v0.5.0) | Speedup |
-|-------|----------------:|---------------:|--------:|
-| Analyze | 24.1 seconds | 2.8 seconds | **8.5×** |
-| Scan | 362 ms | 255 ms | 1.4× |
+## Correctness fix in this release
 
-At 1,000 files: Analyze is **16.7× faster** (4.7s → 0.28s).
+The final partial scanner batch now persists its counters before a run is
+marked finished or cancelled. Previously, a repository with fewer than 500
+supported files could be indexed correctly while its latest scan summary still
+displayed zero files. A Rust regression test covers the fixed path.
 
-### What changed
+## Previously measured performance
 
-1. **Incremental analysis.** Removed workspace-level clearing of imports,
-   symbols, and references at the start of each analysis run. Per-file
-   replace functions already handle their own clearing. Files that are
-   unchanged after a rescan now skip analysis entirely — only new and
-   changed files are re-parsed.
-
-2. **Larger scanner batches.** Batch flush size increased from 100 to 500
-   files, reducing SQLite transaction overhead by 5×. Progress events
-   emit every 50 files instead of 10.
-
-3. **SQLite pragma tuning.** `PRAGMA synchronous=NORMAL` + 8 MB page cache
-   (`cache_size=-8000`) — safe with WAL journal mode already enabled.
-
-### Benchmark methodology
-
-All optimizations were verified by the existing reproducible benchmark
-harness (`cargo run --release --example bench_summary`). The benchmark
-generates synthetic TypeScript projects at runtime (100, 1,000, 5,000 files)
-and measures scan, analysis, graph construction, and rescan performance.
+The v0.5 release benchmark measured 5,000 generated TypeScript files on a
+release build: analysis improved from 24.1 seconds to 2.8 seconds (8.5×), while
+scan time improved from 362 ms to 255 ms (1.4×). These are historical benchmark
+results, not measurements from every machine. See
+[docs/benchmarks.md](./docs/benchmarks.md) for the method and raw table.
 
 ## Installers
 
-- **NSIS:** `CodeCompass_0.5.0_x64-setup.exe`
-- **MSI:** `CodeCompass_0.5.0_x64_en-US.msi`
+- **NSIS:** `CodeCompass_1.0.0_x64-setup.exe`
+- **MSI:** `CodeCompass_1.0.0_x64_en-US.msi`
+
+The installers are unsigned, so Windows SmartScreen may show a warning.
 
 ## Verification
 
-All checks passed before building:
+Release-candidate verification on Windows:
 
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test` (10 frontend tests)
-- `npm run build` (frontend production build)
-- `cd src-tauri && cargo fmt --check`
-- `cd src-tauri && cargo clippy --all-targets -- -D warnings`
-- `cd src-tauri && cargo test` (117 Rust tests)
-- `cd src-tauri && cargo check`
-- `npm run check:versions`
-- `cd src-tauri && cargo run --release --example bench_summary`
+- Prettier, ESLint, strict TypeScript, and version-alignment checks passed.
+- 12 frontend tests passed.
+- 118 Rust tests passed (99 unit, 10 failure-path, 9 fixture integration).
+- Frontend production build, `cargo check`, and Clippy with warnings denied
+  passed.
+- NSIS and MSI installers were produced from the same v1.0.0 source tree.
+
+## Known limitations
+
+- Windows x64 only; macOS and Linux are not release-tested.
+- Installers are unsigned and there is no automatic updater.
+- First-party analyzers cover TypeScript, JavaScript, and CSS; other languages
+  are not yet supported.
+- The dependency graph is capped at 500 nodes and reports truncation.
+- Health and impact scores are heuristics for navigation, not proof of defects.
+- The production frontend build reports a non-blocking large-chunk warning,
+  primarily from the bundled Monaco editor.
