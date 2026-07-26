@@ -2,14 +2,14 @@
 
 All notable changes to CodeCompass are documented in this file.
 
-## [1.0.0] — 2026-07-26
+## [1.0.1] — 2026-07-27
 
 ### Stable release
 
 - Promoted the complete local-first scan, analysis, graph, symbol, viewer,
   insights, impact, health, evolution, and analyzer-plugin workflow to the
   first stable public release.
-- Aligned the npm, Cargo, Tauri, and lockfile versions at `1.0.0`.
+- Aligned the npm, Cargo, Tauri, and lockfile versions at `1.0.1`.
 - Configured the tag workflow to create a stable GitHub Release from
   `RELEASE_NOTES.md` and attach both Windows installer formats.
 - Replaced placeholder release media with screenshots captured from the running

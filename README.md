@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D4)](#installation)
 
-**Status: v1.0.0 Stable** — the first production-oriented public release.
+**Status: v1.0.1 Stable** — the first production-oriented public release.
 
 CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, understand, and assess codebases — entirely offline. No cloud uploads, no AI training on your source code, no network requests after installation.
 
@@ -83,8 +83,8 @@ for the rationale behind each technology choice.
 
 Download from [Releases](https://github.com/Jelly-RayTian/CodeCompass/releases):
 
-- **NSIS**: `CodeCompass_1.0.0_x64-setup.exe` (required)
-- **MSI**: `CodeCompass_1.0.0_x64_en-US.msi` (optional)
+- **NSIS**: `CodeCompass_1.0.1_x64-setup.exe` (required)
+- **MSI**: `CodeCompass_1.0.1_x64_en-US.msi` (optional)
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 

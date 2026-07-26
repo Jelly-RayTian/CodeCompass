@@ -1,11 +1,11 @@
-# CodeCompass v1.0.0 Release Notes
+# CodeCompass v1.0.1 Release Notes
 
-**Release date:** 2026-07-26
+**Release date:** 2026-07-27
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v1.0.0 is the first stable CodeCompass release. It packages the complete
+v1.0.1 is the first stable CodeCompass release. It packages the complete
 local-first workflow developed across the v0.x releases: register a repository,
 scan supported files, analyze imports and symbols, explore dependencies and
 source, and review repository insights without uploading source code.
@@ -22,7 +22,7 @@ source, and review repository insights without uploading source code.
   interrupted runs.
 - **Extensible analyzers:** the registry-based plugin architecture currently
   handles TypeScript, JavaScript, and CSS.
-- **Release polish:** aligned v1.0.0 versions, stable-release CI configuration,
+- **Release polish:** aligned v1.0.1 versions, stable-release CI configuration,
   updated public documentation, real screenshots, and a demo GIF.
 
 ## Correctness fix in this release
@@ -42,8 +42,8 @@ results, not measurements from every machine. See
 
 ## Installers
 
-- **NSIS:** `CodeCompass_1.0.0_x64-setup.exe`
-- **MSI:** `CodeCompass_1.0.0_x64_en-US.msi`
+- **NSIS:** `CodeCompass_1.0.1_x64-setup.exe`
+- **MSI:** `CodeCompass_1.0.1_x64_en-US.msi`
 
 The installers are unsigned, so Windows SmartScreen may show a warning.
 
@@ -56,7 +56,7 @@ Release-candidate verification on Windows:
 - 118 Rust tests passed (99 unit, 10 failure-path, 9 fixture integration).
 - Frontend production build, `cargo check`, and Clippy with warnings denied
   passed.
-- NSIS and MSI installers were produced from the same v1.0.0 source tree.
+- NSIS and MSI installers were produced from the same v1.0.1 source tree.
 
 ## Known limitations
 

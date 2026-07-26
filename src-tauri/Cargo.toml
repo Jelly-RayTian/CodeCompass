@@ -1,6 +1,6 @@
 [package]
 name = "codecompass"
-version = "1.0.0"
+version = "1.0.1"
 description = "A local-first desktop application for understanding unfamiliar codebases"
 authors = ["Jelly-RayTian"]
 license = "MIT"
