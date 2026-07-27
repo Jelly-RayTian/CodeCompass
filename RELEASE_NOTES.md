@@ -1,14 +1,14 @@
-# CodeCompass v1.0.1 Release Notes
+# CodeCompass v1.0.2 Release Notes
 
 **Release date:** 2026-07-27
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md)
 
 ## Overview
 
-v1.0.1 is the first stable CodeCompass release. It packages the complete
-local-first workflow developed across the v0.x releases: register a repository,
-scan supported files, analyze imports and symbols, explore dependencies and
-source, and review repository insights without uploading source code.
+v1.0.2 hardens the stable CodeCompass release for public distribution. It
+reduces startup JavaScript, adds enforceable bundle budgets, validates the
+installed application on a clean Windows runner, and publishes checksums for
+every installer.
 
 ## Highlights
 
@@ -22,15 +22,21 @@ source, and review repository insights without uploading source code.
   interrupted runs.
 - **Extensible analyzers:** the registry-based plugin architecture currently
   handles TypeScript, JavaScript, and CSS.
-- **Release polish:** aligned v1.0.1 versions, stable-release CI configuration,
-  updated public documentation, real screenshots, and a demo GIF.
+- **Faster startup bundle:** the Viewer and bundled Monaco runtime now load on
+  demand, reducing the initial production entry from about 4.21 MB to 408.6 KB.
+- **Release hardening:** NSIS and MSI are both required; the release runner
+  installs, launches, and uninstalls the NSIS package before publication.
+- **Safe preflight:** maintainers can run the complete release pipeline on a
+  branch without creating a public tag or Release.
+- **Verifiable downloads:** each release includes `SHA256SUMS.txt`.
+- **Exact artifact selection:** the workflow only uploads filenames matching
+  the manifest version, preventing stale bundles from entering a release.
 
-## Correctness fix in this release
+## Enforced bundle budgets
 
-The final partial scanner batch now persists its counters before a run is
-marked finished or cancelled. Previously, a repository with fewer than 500
-supported files could be indexed correctly while its latest scan summary still
-displayed zero files. A Rust regression test covers the fixed path.
+The production build fails if the initial JavaScript entry exceeds 500 KiB or
+the lazy Viewer chunk exceeds 4,000 KiB. This preserves the startup improvement
+and ensures Monaco cannot silently move back into the initial bundle.
 
 ## Previously measured performance
 
@@ -42,8 +48,9 @@ results, not measurements from every machine. See
 
 ## Installers
 
-- **NSIS:** `CodeCompass_1.0.1_x64-setup.exe`
-- **MSI:** `CodeCompass_1.0.1_x64_en-US.msi`
+- **NSIS:** `CodeCompass_1.0.2_x64-setup.exe`
+- **MSI:** `CodeCompass_1.0.2_x64_en-US.msi`
+- **Checksums:** `SHA256SUMS.txt`
 
 The installers are unsigned, so Windows SmartScreen may show a warning.
 
@@ -52,11 +59,13 @@ The installers are unsigned, so Windows SmartScreen may show a warning.
 Release-candidate verification on Windows:
 
 - Prettier, ESLint, strict TypeScript, and version-alignment checks passed.
-- 12 frontend tests passed.
+- 13 frontend tests passed.
 - 118 Rust tests passed (99 unit, 10 failure-path, 9 fixture integration).
 - Frontend production build, `cargo check`, and Clippy with warnings denied
   passed.
-- NSIS and MSI installers were produced from the same v1.0.1 source tree.
+- NSIS and MSI installers were produced from the same v1.0.2 source tree.
+- The release workflow validates an NSIS install-launch-uninstall cycle on its
+  clean Windows runner before publishing.
 
 ## Known limitations
 
@@ -66,5 +75,5 @@ Release-candidate verification on Windows:
   are not yet supported.
 - The dependency graph is capped at 500 nodes and reports truncation.
 - Health and impact scores are heuristics for navigation, not proof of defects.
-- The production frontend build reports a non-blocking large-chunk warning,
-  primarily from the bundled Monaco editor.
+- The Viewer remains a large on-demand chunk because Monaco is bundled locally;
+  its size is guarded by the release build budget.

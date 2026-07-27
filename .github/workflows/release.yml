@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
 
 # Release needs to create a GitHub Release and upload artifacts.
 # `contents: write` is the minimal scope required for that.
@@ -39,7 +40,12 @@ jobs:
         run: npm ci
 
       - name: Validate version alignment with tag
+        if: github.ref_type == 'tag'
         run: node scripts/check-versions.mjs --tag=${{ github.ref_name }}
+
+      - name: Validate version alignment for preflight
+        if: github.ref_type != 'tag'
+        run: npm run check:versions
 
       - name: Frontend lint
         run: npm run lint
@@ -74,31 +80,86 @@ jobs:
 
       - name: Validate NSIS installer (required)
         run: |
-          $nsis = Get-ChildItem src-tauri/target/release/bundle/nsis/*.exe -ErrorAction SilentlyContinue
-          if (-not $nsis) {
-            Write-Error "NSIS installer is missing — build may have failed"
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $nsis = "src-tauri/target/release/bundle/nsis/CodeCompass_${version}_x64-setup.exe"
+          if (-not (Test-Path $nsis)) {
+            Write-Error "Expected NSIS installer is missing: $nsis"
             exit 1
           }
-          Write-Host "NSIS: $($nsis.FullName)"
+          Write-Host "NSIS: $nsis"
 
-      - name: Validate MSI installer (optional)
+      - name: Validate MSI installer (required)
         run: |
-          $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi -ErrorAction SilentlyContinue
-          if ($msi) {
-            Write-Host "MSI: $($msi.FullName)"
-          } else {
-            Write-Warning "MSI installer not produced — continuing without it"
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $msi = "src-tauri/target/release/bundle/msi/CodeCompass_${version}_x64_en-US.msi"
+          if (-not (Test-Path $msi)) {
+            Write-Error "Expected MSI installer is missing: $msi"
+            exit 1
+          }
+          Write-Host "MSI: $msi"
+
+      - name: Smoke test NSIS install, launch, and uninstall
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $installer = Resolve-Path "src-tauri/target/release/bundle/nsis/CodeCompass_${version}_x64-setup.exe"
+          $installDir = Join-Path $env:RUNNER_TEMP 'CodeCompass-release-smoke'
+
+          $install = Start-Process -FilePath $installer.Path `
+            -ArgumentList @('/S', "/D=$installDir") `
+            -WindowStyle Hidden -Wait -PassThru
+          if ($install.ExitCode -ne 0) {
+            throw "NSIS installer exited with code $($install.ExitCode)"
+          }
+
+          $application = Get-ChildItem $installDir -Filter 'CodeCompass.exe' -Recurse |
+            Select-Object -First 1
+          if (-not $application) {
+            throw "Installed CodeCompass.exe was not found under $installDir"
+          }
+
+          $process = Start-Process -FilePath $application.FullName `
+            -WindowStyle Hidden -PassThru
+          Start-Sleep -Seconds 5
+          if ($process.HasExited) {
+            throw "Installed CodeCompass exited during the launch smoke test with code $($process.ExitCode)"
+          }
+          Stop-Process -Id $process.Id -Force
+          $process.WaitForExit()
+
+          $uninstaller = Get-ChildItem $installDir -Filter 'Uninstall*.exe' -Recurse |
+            Select-Object -First 1
+          if (-not $uninstaller) {
+            throw "NSIS uninstaller was not found under $installDir"
+          }
+
+          $uninstall = Start-Process -FilePath $uninstaller.FullName `
+            -ArgumentList '/S' -WindowStyle Hidden -Wait -PassThru
+          if ($uninstall.ExitCode -ne 0) {
+            throw "NSIS uninstaller exited with code $($uninstall.ExitCode)"
           }
 
       - name: Prepare release artifacts
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path release-artifacts | Out-Null
-          Copy-Item src-tauri/target/release/bundle/nsis/*.exe release-artifacts/ -ErrorAction Stop
-          Copy-Item src-tauri/target/release/bundle/msi/*.msi release-artifacts/ -ErrorAction SilentlyContinue
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          Copy-Item "src-tauri/target/release/bundle/nsis/CodeCompass_${version}_x64-setup.exe" release-artifacts/ -ErrorAction Stop
+          Copy-Item "src-tauri/target/release/bundle/msi/CodeCompass_${version}_x64_en-US.msi" release-artifacts/ -ErrorAction Stop
+
+          $checksumLines = Get-ChildItem release-artifacts -File |
+            Sort-Object Name |
+            ForEach-Object {
+              $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              "$hash  $($_.Name)"
+            }
+          $checksumLines | Set-Content release-artifacts/SHA256SUMS.txt -Encoding ascii
+
           Write-Host "Artifacts:"
           Get-ChildItem release-artifacts
 
       - name: Create GitHub Release
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           prerelease: false

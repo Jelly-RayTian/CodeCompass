@@ -27,15 +27,17 @@ source-code upload.
 - **Large-repo safety.** The dependency graph truncates at 500 nodes
   with a `truncated` flag and a UI warning, so thousand-file repos
   degrade gracefully instead of freezing.
-- **Offline Monaco.** The Monaco Editor runtime is bundled via Vite web
-  workers (`src/lib/monacoConfig.ts`) rather than loaded from a CDN,
-  preserving the no-network privacy guarantee.
+- **Offline, route-split Monaco.** The Monaco Editor runtime is bundled via
+  Vite web workers (`src/lib/monacoConfig.ts`) rather than loaded from a CDN,
+  preserving the no-network privacy guarantee. Lazy Viewer loading reduced
+  the production entry chunk from about 4.21 MB to 408.6 KB.
 - **Reproducible benchmarks.** A Criterion benchmark harness plus a
   single-shot summary runner generate fixtures of 100/1,000/5,000 files
   at runtime and measure scan, analysis, and graph-construction time.
-- **Hardened release engineering.** Version-alignment script, `npm ci`
-  in CI, least-privilege workflow permissions, required-NSIS validation,
-  and unsigned-installer warnings in the release notes.
+- **Hardened release engineering.** Version and bundle-budget checks,
+  least-privilege workflow permissions, required NSIS/MSI validation,
+  clean-runner install-launch-uninstall smoke testing, and published SHA-256
+  checksums.
 
 ## Hardest Engineering Problems
 
@@ -65,14 +67,14 @@ source-code upload.
   truncation). All use temp directories and temp SQLite databases.
 - **Frontend:** Vitest with jsdom, a Tauri mock, and
   `@testing-library/react` covering app shell, navigation, DB status,
-  empty states, and error/retry paths.
+  empty states, lazy Viewer loading, and error/retry paths.
 - **Quality gates:** `cargo fmt --check`, `cargo clippy --all-targets
 -- -D warnings`, `cargo test`, `cargo check`, `npm run lint`,
   `npm run typecheck` (strict + `noUncheckedIndexedAccess` +
   `exactOptionalPropertyTypes`), `npm run test`, `npm run build`.
 - **CI:** GitHub Actions on Windows runs the full suite on every push
   and PR. The release workflow re-runs everything and validates the tag
-  version before building installers.
+  version before building and smoke-testing installers.
 
 ## Performance Strategy
 

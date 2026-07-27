@@ -190,6 +190,16 @@
 - Installer configuration (MSI/NSIS for Windows)
 - Application icon and branding
 
+## v1.0.2 — Release Hardening
+
+**Status:** Complete
+
+- Lazy-load the Viewer and Monaco runtime
+- Enforce initial and Viewer JavaScript bundle budgets
+- Require NSIS and MSI release artifacts
+- Install, launch, and uninstall NSIS on the clean release runner
+- Publish `SHA256SUMS.txt` with every release
+
 ## Post-v1.0 candidates
 
 **Status:** Not started

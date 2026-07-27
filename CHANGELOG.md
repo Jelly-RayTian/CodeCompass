@@ -2,6 +2,28 @@
 
 All notable changes to CodeCompass are documented in this file.
 
+## [1.0.2] — 2026-07-27
+
+### Performance
+
+- Load the source Viewer and bundled Monaco runtime only when the Viewer route
+  opens, reducing the initial JavaScript entry from about 4.21 MB to 408.6 KB
+  in the production build.
+- Enforce explicit production bundle budgets: 500 KiB for the initial entry
+  and 4,000 KiB for the lazy Viewer chunk.
+
+### Release hardening
+
+- Require both NSIS and MSI installers in the release workflow.
+- Install, launch, and uninstall the NSIS package on the clean GitHub-hosted
+  Windows runner before publishing a release.
+- Generate and publish `SHA256SUMS.txt` with the installer artifacts.
+- Match installer filenames to the manifest version so stale local artifacts
+  cannot be included by a wildcard.
+- Support a manually dispatched preflight that exercises the full release
+  pipeline without creating a public Release.
+- Add a frontend regression test for loading the Viewer route on demand.
+
 ## [1.0.1] — 2026-07-27
 
 ### Stable release

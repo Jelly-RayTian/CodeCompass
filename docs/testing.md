@@ -46,10 +46,11 @@ npm run test:watch    # watch mode
 
 ### Current coverage
 
-The frontend suite currently contains 12 tests covering the application shell,
+The frontend suite currently contains 13 tests covering the application shell,
 Home data and database-path redaction, navigation, workspace empty/error states,
-retry behavior, Settings, Insights, and both supported languages. The exact
-breakdown is maintained in [test-matrix.md](test-matrix.md).
+retry behavior, Settings, Insights, lazy Viewer loading, and both supported
+languages. The exact breakdown is maintained in
+[test-matrix.md](test-matrix.md).
 
 ## Rust Tests
 
@@ -81,3 +82,7 @@ task cancellation, error payloads, and end-to-end persistence. See
 
 GitHub Actions runs all checks on every push and PR. See
 [.github/workflows/ci.yml](../.github/workflows/ci.yml).
+
+Tagged releases also build both Windows installer formats, perform an
+install-launch-uninstall NSIS smoke test on the clean Windows runner, and
+publish installer checksums.

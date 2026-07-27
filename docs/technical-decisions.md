@@ -176,3 +176,25 @@ of timestamp comparison for deletion detection.
 - The truncated view is not the complete graph. Users with very large
   repos must use the path/directory filter to see specific subgraphs.
   Cycle detection runs only on the returned subset.
+
+## Why the Viewer is route-split
+
+**Decision:** Load the Viewer page and bundled Monaco runtime through a
+React lazy route.
+
+**Why:**
+
+- **Startup cost.** Most sessions begin on Home or Workspaces; they should
+  not parse Monaco before a source file is opened.
+- **Measurable budget.** The production entry chunk dropped from about
+  4.21 MB to 408.6 KB. A build script now fails if the initial entry exceeds
+  500 KiB or the lazy Viewer chunk exceeds 4,000 KiB.
+- **Privacy preserved.** Monaco remains bundled locally and makes no CDN
+  request; only its loading time changes.
+
+**Tradeoffs:**
+
+- The first Viewer navigation performs one additional local chunk load and
+  briefly shows an accessible loading state.
+- Monaco remains a large dependency, but its cost is isolated from startup
+  and guarded by an explicit budget.

@@ -8,8 +8,8 @@ npm run tauri:build
 
 Artifacts are in `src-tauri/target/release/bundle/`:
 
-- NSIS: `bundle/nsis/CodeCompass_1.0.1_x64-setup.exe`
-- MSI: `bundle/msi/CodeCompass_1.0.1_x64_en-US.msi`
+- NSIS: `bundle/nsis/CodeCompass_1.0.2_x64-setup.exe`
+- MSI: `bundle/msi/CodeCompass_1.0.2_x64_en-US.msi`
 
 ## Versioning
 
@@ -28,12 +28,24 @@ A release-time script fails when any of these disagree:
 
 ```bash
 npm run check:versions                       # internal consistency
-node scripts/check-versions.mjs --tag=v1.0.1   # also check the tag
+node scripts/check-versions.mjs --tag=v1.0.2   # also check the tag
 ```
 
 The CI and Release workflows run `check:versions` automatically; the
 Release workflow validates the tag against the three manifest versions
 before building.
+
+### Preflight release run
+
+Before creating a public tag, run the complete installer pipeline against a
+branch:
+
+```bash
+gh workflow run Release --ref <branch>
+```
+
+The manual preflight performs every build, installer, checksum, and smoke-test
+step but skips GitHub Release creation. Only a `v*` tag can publish a release.
 
 ## Tag & Release
 
@@ -47,8 +59,8 @@ npm run check:versions
 npm run tauri:build
 
 # 3. Tag exactly (do not let CI infer the version):
-git tag -a v1.0.1 -m "CodeCompass v1.0.1"
-git push origin v1.0.1
+git tag -a v1.0.2 -m "CodeCompass v1.0.2"
+git push origin v1.0.2
 ```
 
 Pushing a tag matching `v*` triggers the GitHub Actions release workflow
@@ -56,9 +68,10 @@ Pushing a tag matching `v*` triggers the GitHub Actions release workflow
 
 1. Validates version alignment against the tag (`check:versions --tag=…`)
 2. Runs the full CI suite (lint, typecheck, test, build, fmt, clippy, test, check)
-3. Builds NSIS (required) and MSI (optional) installers
-4. Fails clearly if the NSIS installer is missing
-5. Creates a GitHub Release using `RELEASE_NOTES.md` and uploads the installers
+3. Builds required NSIS and MSI installers
+4. Installs, launches, and uninstalls the NSIS build on the clean Windows runner
+5. Generates `SHA256SUMS.txt` for the installers
+6. Creates a GitHub Release using `RELEASE_NOTES.md` and uploads all artifacts
 
 ### Permissions
 
@@ -101,6 +114,7 @@ branded CodeCompass compass badge (generated from
 - [ ] Tag created: `git tag vX.Y.Z`
 - [ ] Tag pushed: `git push origin vX.Y.Z`
 - [ ] GitHub Release created by CI
-- [ ] Installers uploaded and downloadable
-- [ ] Smoke test: install and launch the `.exe`, verify branded icon
+- [ ] NSIS, MSI, and `SHA256SUMS.txt` uploaded and downloadable
+- [ ] Automated smoke test installs, launches, and uninstalls the NSIS package
+- [ ] Manual smoke test verifies the branded icon and primary workflow
 - [ ] Release is marked as the latest stable release, not a prerelease
