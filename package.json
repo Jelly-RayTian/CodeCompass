@@ -1,12 +1,12 @@
 {
   "name": "codecompass",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "A local-first desktop application for understanding unfamiliar codebases.",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build",
+    "build": "tsc -b --noEmit && vite build && node scripts/check-bundle-size.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

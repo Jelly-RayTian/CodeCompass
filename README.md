@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-0078D4)](#installation)
 
-**Status: v1.0.1 Stable** — the first production-oriented public release.
+**Status: v1.0.2 Stable** — release-hardened Windows distribution.
 
 CodeCompass analyzes TypeScript and JavaScript projects to help you navigate, understand, and assess codebases — entirely offline. No cloud uploads, no AI training on your source code, no network requests after installation.
 
@@ -83,8 +83,9 @@ for the rationale behind each technology choice.
 
 Download from [Releases](https://github.com/Jelly-RayTian/CodeCompass/releases):
 
-- **NSIS**: `CodeCompass_1.0.1_x64-setup.exe` (required)
-- **MSI**: `CodeCompass_1.0.1_x64_en-US.msi` (optional)
+- **NSIS**: `CodeCompass_1.0.2_x64-setup.exe` (required)
+- **MSI**: `CodeCompass_1.0.2_x64_en-US.msi` (required)
+- **Checksums**: `SHA256SUMS.txt`
 
 > Installers are **unsigned** — Windows SmartScreen may warn. Click "More info" → "Run anyway".
 
@@ -169,9 +170,10 @@ statement.
 - **Large-repo graph safety** — the dependency graph truncates at 500
   nodes with a `truncated` flag rather than refusing to render, so
   thousand-file repos show a clear warning instead of a silent freeze.
-- **Offline Monaco** — the Monaco Editor runtime is bundled via Vite
-  workers instead of loaded from a CDN, preserving the no-network
-  guarantee.
+- **Offline, on-demand Monaco** — the Monaco Editor runtime is bundled via
+  Vite workers instead of loaded from a CDN, preserving the no-network
+  guarantee. The Viewer route loads it on demand, keeping Monaco out of
+  the initial application bundle.
 - **Cross-thread SQLite access** — `Database` wraps
   `Mutex<Connection>` (Connection is `Send` not `Sync`), managed as
   Tauri state so all command handlers share one connection safely.
@@ -180,7 +182,8 @@ statement.
 
 - **Windows only** — macOS and Linux not tested
 - **Unsigned installers** — SmartScreen may warn during installation
-- **TypeScript/JavaScript only** — no Python, Rust, or other language support yet
+- **TypeScript/JavaScript/CSS analyzers** — no Python, Rust, or other language
+  analyzers yet
 - **No auto-update** — users must manually download new versions
 - **Large repos (>10k files)** — analysis is batch-only; graph view truncates to 500 nodes with a warning
 - **Git optional** — the Git panel requires `git` on `PATH`; without it the panel simply shows "not a repo"

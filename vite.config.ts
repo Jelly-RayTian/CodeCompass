@@ -24,6 +24,10 @@ export default defineConfig({
     target: 'es2022',
     minify: 'esbuild',
     sourcemap: false,
+    manifest: true,
+    // Monaco is isolated behind the lazy Viewer route and checked against an
+    // explicit budget by scripts/check-bundle-size.mjs.
+    chunkSizeWarningLimit: 4000,
   },
   test: {
     globals: true,

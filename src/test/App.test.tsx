@@ -113,6 +113,11 @@ describe('App', () => {
     expect(screen.getByText(/Select a folder/)).toBeInTheDocument();
   });
 
+  it('loads the source viewer on demand', async () => {
+    render(<App initialEntries={['/viewer']} />);
+    expect(await screen.findByText('No file selected')).toBeInTheDocument();
+  });
+
   it('shows error state when workspace list fails', async () => {
     mockTauriCommand('list_indexed_folders_command', async () => {
       throw new Error('database locked');

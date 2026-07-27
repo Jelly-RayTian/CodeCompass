@@ -1,6 +1,6 @@
 # Test Matrix
 
-Last updated: 2026-07-26 | Total: 130 tests
+Last updated: 2026-07-27 | Total: 131 tests
 
 ## Rust Tests (118)
 
@@ -58,7 +58,7 @@ Last updated: 2026-07-26 | Total: 130 tests
 | `interrupted_runs_marked_on_database_reopen`          | Crash-recovery marks running scans interrupted  |
 | `graph_truncation_caps_nodes_at_limit`                | >500-node graph truncates with `truncated` flag |
 
-## Frontend Tests (12)
+## Frontend Tests (13)
 
 | Test                           | Coverage                            |
 | ------------------------------ | ----------------------------------- |
@@ -70,6 +70,7 @@ Last updated: 2026-07-26 | Total: 130 tests
 | Persisted workspace file count | Existing scan status loads on entry |
 | Settings page                  | Navigation + database status label  |
 | Insights page folder selector  | Navigation + dropdown visible       |
+| Lazy Viewer route              | Viewer loads on demand              |
 | Error state on failure         | Workspace list error → error banner |
 | Retry button                   | Error state includes retry action   |
 | Default English translations   | English catalog is available        |
